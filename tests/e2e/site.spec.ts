@@ -114,10 +114,20 @@ test("keyboard focus starts at the skip link and reduced motion stops looping", 
   expect(running).toBe(0);
 });
 
-test("@claim:plus-price shows the one-time price and Sociobot checkout", async ({ page }) => {
+test("@claim:plus-price shows the one-time price and opens a live Sociobot checkout", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.getByText("$29")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Buy Archive Plus" })).toHaveAttribute("href", "https://api.sociobot.in/api/v1/products/mail-attachment-archive/checkout");
+  const purchase = page.getByRole("link", { name: "Buy Archive Plus" });
+  const checkoutUrl = "https://api.sociobot.in/api/v1/products/mail-attachment-archive/checkout";
+  await expect(purchase).toHaveAttribute("href", checkoutUrl);
+
+  // Do not follow the hosted checkout or create a purchase. The gateway must
+  // prove that this enabled product resolves to a real Dodo checkout session.
+  const response = await request.get(checkoutUrl, { maxRedirects: 0 });
+  expect(response.status()).toBe(303);
+  const redirect = new URL(response.headers().location);
+  expect(redirect.origin).toBe("https://checkout.dodopayments.com");
+  expect(redirect.pathname).toMatch(/^\/session\/cks_[A-Za-z0-9]+$/);
 });
 
 test("cold load resolves release metadata on the same origin", async ({ page }) => {
