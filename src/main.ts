@@ -38,6 +38,42 @@ function setRouteMetadata(title: string, description: string, path: string): voi
   set('meta[name="twitter:description"]', description);
 }
 
+/** Give document navigation a useful keyboard and screen-reader destination. */
+function announceRoute(): void {
+  const shouldFocus = sessionStorage.getItem("maa:route-navigation") === "1" || sessionStorage.getItem("maa:history-focus") === "1";
+  if (!shouldFocus) return;
+  sessionStorage.removeItem("maa:route-navigation");
+  sessionStorage.removeItem("maa:history-focus");
+  requestAnimationFrame(() => {
+    const heading = document.querySelector<HTMLElement>("main h1");
+    const announcement = document.querySelector<HTMLElement>("#route-announcement");
+    if (!heading) return;
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+    if (announcement) announcement.textContent = heading.textContent?.trim() || "New page";
+  });
+}
+
+function prepareRouteLinks(): void {
+  document.querySelectorAll<HTMLAnchorElement>('a[href^="/"]').forEach(link => {
+    link.addEventListener("click", () => sessionStorage.setItem("maa:route-navigation", "1"));
+  });
+}
+
+function restoreRouteFocusOnHistory(): void {
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted) return;
+    const heading = document.querySelector<HTMLElement>("main h1");
+    heading?.focus({ preventScroll: true });
+    const announcement = document.querySelector<HTMLElement>("#route-announcement");
+    if (heading && announcement) announcement.textContent = heading.textContent?.trim() || "New page";
+  }, { once: true });
+}
+
+function siteHeader(demo = false): string {
+  return `<header class="site-header"><a class="brand" href="/" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a><nav aria-label="Primary"><a href="/demo/">Demo</a><a href="/#proof">How it works</a><a href="/#download">Download</a><a href="/privacy/">Privacy</a></nav>${demo ? `<span class="offline-badge">● Sample archive</span>` : ""}</header>`;
+}
+
 function siteFooter(): string {
   return `<footer><div class="brand">${icon}<span>Mail Attachment Archive</span></div><p>Local attachment archives with visible exceptions.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-mail-attachment-archive">Source</a></nav><small>Mail Attachment Archive · v${appVersion} · Built by Param Factory · Original generated hero imagery; provenance in the repository.</small></footer>`;
 }
@@ -73,16 +109,16 @@ function renderLegal(page: "privacy" | "terms"): void {
   const content = privacy
     ? `<p class="eyebrow">Effective 28 August 2026</p><h1>Privacy, in plain language</h1><p><strong>Your mailbox, messages, attachments, hashes, and reports stay on your computer.</strong> Mail Attachment Archive has no user account, telemetry, advertising, or analytics SDK.</p><h2>Local archive data</h2><p>The desktop app reads files you explicitly choose and writes an archive to a folder you explicitly choose. It does not upload mail data. Optional encryption derives a key from your passphrase on-device; the passphrase is not stored.</p><h2>License verification</h2><p>If you buy or restore Archive Plus, only your license token is sent to Sociobot’s billing API at most once per day. Mail data is never part of this request.</p><h2>Website</h2><p>The landing page sets no tracking cookies and loads no third-party scripts, fonts, pixels, or analytics.</p><h2>Contact</h2><p>Email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p>`
     : `<p class="eyebrow">Effective 28 August 2026</p><h1>Terms of use</h1><p>Mail Attachment Archive is a local utility for creating and verifying attachment archives from mail exports you control.</p><h2>Your responsibility</h2><p>You must have the right to process the mail you import. Keep an independent source copy until you have inspected the report. Attachments remain potentially harmful if restored and opened.</p><h2>No silent promises</h2><p>“Resolved” means decoded bytes were stored locally and matched their SHA-256 checksum, not that the content is safe or semantically complete.</p><h2>Archive Plus</h2><p>Archive Plus costs <strong>US $29 once</strong> and adds recent archive shortcuts and a compact ledger. Core importing, deduplication, encryption, restoration, and reports are free. Sociobot/Dodo is the merchant of record; refunds revoke the license.</p><h2>Warranty</h2><p>The software is provided “as is,” to the extent permitted by law. These terms do not limit rights that cannot legally be limited.</p><h2>Contact</h2><p>Email <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p>`;
-  root.innerHTML = `<header class="legal-header"><a class="brand" href="/">${icon}<span>Mail Attachment Archive</span></a></header><main id="main" tabindex="-1" class="legal-main">${content}</main>${siteFooter()}`;
+  root.innerHTML = `${siteHeader()}<main id="main" tabindex="-1" class="legal-main">${content}</main>${siteFooter()}<div id="route-announcement" class="sr-only" aria-live="polite"></div>`;
+  prepareRouteLinks();
+  restoreRouteFocusOnHistory();
+  announceRoute();
 }
 
 function renderSite(): void {
   setRouteMetadata("Mail Attachment Archive — check an MBOX export", "Make a local attachment archive and keep an explicit report of every failure.", "/");
   root.innerHTML = `
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a>
-      <nav aria-label="Primary"><a href="/demo/">Demo</a><a href="#proof">How it works</a><a href="#price">Pricing</a><a href="#download">Download</a></nav>
-    </header>
+    ${siteHeader()}
     <main id="main" tabindex="-1">
       <section class="hero">
         <div class="hero-copy">
@@ -106,13 +142,15 @@ function renderSite(): void {
       </section>
 
       <section class="proof" id="proof" aria-labelledby="proof-title">
-        <div class="section-intro"><p class="eyebrow">The evidence pass</p><h2 id="proof-title">A backup you can interrogate</h2><p>A mailbox blob can exist while its useful files are missing. This archive makes each result inspectable.</p></div>
+        <div class="section-intro"><p class="eyebrow">How attachment checks work</p><h2 id="proof-title">Check every attachment result</h2><p>An MBOX export can exist while useful files are missing. This archive shows each attachment result.</p></div>
         <ol class="process">
-          <li><span>01</span><h3>Import the export</h3><p>Choose a standard MBOX file. The app reads messages locally and never connects to your email account.</p></li>
-          <li><span>02</span><h3>Resolve and hash</h3><p>Attachments are decoded, SHA-256 hashed, and stored once—even when the same file appears in many threads.</p></li>
-          <li><span>03</span><h3>Keep the exceptions</h3><p>Missing, malformed, and corrupt items stay visible in a CSV or JSON verification report.</p></li>
+          <li><span>01</span><h3>Import the MBOX export</h3><p>Choose a standard MBOX export. The app reads it locally and never connects to your email account.</p></li>
+          <li><span>02</span><h3>Verify each attachment</h3><p>Attachments are decoded, checked, and stored once—even when the same file appears in many threads.</p></li>
+          <li><span>03</span><h3>Review every failed attachment</h3><p>Missing, malformed, and corrupt items stay visible in a CSV or JSON verification report.</p></li>
         </ol>
       </section>
+
+      <section class="walkthrough" aria-labelledby="walkthrough-title"><div class="section-intro"><p class="eyebrow">Desktop walkthrough</p><h2 id="walkthrough-title">Review the archive before you download</h2><p>These frames show the desktop steps for an MBOX export and its verification report.</p></div><div class="walkthrough-grid"><figure><img src="/assets/walkthrough-import.svg" width="720" height="450" alt="Desktop app screen with the Import MBOX export control selected." /><figcaption>1. Choose an MBOX export.</figcaption></figure><figure><img src="/assets/walkthrough-folder.svg" width="720" height="450" alt="Desktop app screen choosing a local archive folder and optional encryption." /><figcaption>2. Choose a local archive folder.</figcaption></figure><figure><img src="/assets/walkthrough-report.svg" width="720" height="450" alt="Desktop app verification report showing three resolved references and one reported failure." /><figcaption>3. Review the verification report.</figcaption></figure><figure><img src="/assets/walkthrough-restore.svg" width="720" height="450" alt="Desktop app row for a checked PDF with a restore action." /><figcaption>4. Restore a checksum-verified file.</figcaption></figure></div></section>
 
       <section class="ledger-demo" aria-labelledby="ledger-title">
         <div class="ledger-head"><div><p class="eyebrow">Sample archive</p><h2 id="ledger-title">See the files, not just the mailbox</h2></div><div class="score"><strong>3 of 4</strong><span>sample references resolved</span></div></div>
@@ -124,20 +162,23 @@ function renderSite(): void {
         </div>
       </section>
 
-      <section class="privacy-band" aria-labelledby="private-title"><div class="geometry-seal" aria-hidden="true"><span></span><span></span><span></span></div><div><p class="eyebrow">Your mail is not our data</p><h2 id="private-title">There is no cloud to trust.</h2><p>Parsing, hashing, search, and reports happen on your computer. No analytics, accounts, ads, or mail metadata leave it.</p></div></section>
+      <section class="privacy-band" aria-labelledby="private-title"><div class="geometry-seal" aria-hidden="true"><span></span><span></span><span></span></div><div><p class="eyebrow">Private processing</p><h2 id="private-title">Mail processing stays on your computer.</h2><p>Importing, checking, search, and verification reports happen on your computer. No mail data leaves it.</p></div></section>
 
       <section class="pricing" id="price" aria-labelledby="price-title">
-        <div><p class="eyebrow">Pay once, when it earns your trust</p><h2 id="price-title">The complete archive engine is free.</h2><p>Import, deduplication, encryption, restoration, and every safety report stay available to everyone. Archive Plus adds convenience for people managing repeated migrations.</p></div>
-        <div class="price-panel"><p><strong>$29</strong> one-time</p><ul><li>Saved recent archive shortcuts</li><li>Compact attachment ledger</li><li>Support continued local-first updates</li></ul><a class="button primary" href="${checkoutUrl}">Buy Archive Plus</a><button class="text-button" id="restore-license">Have a license? Restore it</button><p class="fine">Sociobot/Dodo is the merchant of record. Refunds revoke the license. <a href="./terms/">Terms</a></p></div>
+        <div><p class="eyebrow">Archive Plus pricing</p><h2 id="price-title">The complete archive engine is free.</h2><p>Import, duplicate checks, encryption, restoration, and verification reports stay free. Archive Plus adds shortcuts for repeated migrations.</p></div>
+        <div class="price-panel"><p><strong>$29</strong> one-time</p><ul><li>Saved recent archive shortcuts</li><li>Compact attachment ledger</li><li>Helps fund future app updates</li></ul><a class="button primary" href="${checkoutUrl}">Buy Archive Plus</a><button class="text-button" id="restore-license">Have a license? Restore it</button><p class="fine">Sociobot/Dodo is the merchant of record. Refunds revoke the license. <a href="./terms/">Terms</a></p></div>
       </section>
 
-      <section class="final-cta"><p class="eyebrow">Leave with evidence</p><h2>Your account can close. Your records should still open.</h2><a class="button primary" href="#download">Get Mail Attachment Archive</a></section>
+      <section class="final-cta"><p class="eyebrow">Keep a checked local archive</p><h2>Your account can close. Your records should still open.</h2><a class="button primary" href="#download">Download Mail Attachment Archive</a></section>
     </main>
-    ${siteFooter()}
+    ${siteFooter()}<div id="route-announcement" class="sr-only" aria-live="polite"></div>
     <dialog id="license-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><h2>Restore Archive Plus</h2><p>Paste the license token from your receipt. It is stored only in this browser.</p><label for="license-token">License token</label><input id="license-token" autocomplete="off" /><p class="form-status" aria-live="polite"></p><button class="button primary" id="verify-token" type="button">Verify license</button></form></dialog>`;
 
   void configureDownload();
   bindLicenseDialog();
+  prepareRouteLinks();
+  restoreRouteFocusOnHistory();
+  announceRoute();
 }
 
 function renderDemo(): void {
@@ -145,12 +186,12 @@ function renderDemo(): void {
   localStorage.setItem(demoStorageKey, JSON.stringify({ startedAt: new Date().toISOString() }));
   root.innerHTML = `
     <div class="demo-banner" role="status"><strong>Demo — sample data, nothing is saved</strong><span id="demo-notice" aria-live="polite"></span><div><button class="text-button" id="reset-demo">Reset demo</button><a class="button secondary" id="leave-demo" href="/#download">Start for real</a></div></div>
-    <header class="app-header"><a class="brand" id="demo-home" href="/" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a><span class="offline-badge">● Sample archive</span></header>
+    ${siteHeader(true)}
     <main id="main" tabindex="-1" class="workspace demo-workspace">
       <section class="workspace-title"><div><p class="eyebrow">Leaving-account sample</p><h1>Inspect a checked attachment archive</h1><p id="archive-subtitle">leaving-work-account.mbox · four attachment references</p></div></section>
       <section id="demo-state"></section>
     </main>
-    ${siteFooter()}`;
+    ${siteFooter()}<div id="route-announcement" class="sr-only" aria-live="polite"></div>`;
   renderDemoArchive();
   document.querySelector("#reset-demo")?.addEventListener("click", () => {
     localStorage.removeItem(demoStorageKey);
@@ -159,8 +200,14 @@ function renderDemo(): void {
     document.querySelector<HTMLElement>("#demo-notice")!.textContent = "Sample restored.";
   });
   document.querySelector("#leave-demo")?.addEventListener("click", () => localStorage.removeItem(demoStorageKey));
-  document.querySelector("#demo-home")?.addEventListener("click", () => localStorage.removeItem(demoStorageKey));
-  window.addEventListener("pagehide", () => localStorage.removeItem(demoStorageKey), { once: true });
+  document.querySelector(".site-header .brand")?.addEventListener("click", () => localStorage.removeItem(demoStorageKey));
+  window.addEventListener("pagehide", () => {
+    localStorage.removeItem(demoStorageKey);
+    sessionStorage.setItem("maa:history-focus", "1");
+  }, { once: true });
+  prepareRouteLinks();
+  restoreRouteFocusOnHistory();
+  announceRoute();
 }
 
 function renderDemoArchive(): void {
@@ -213,6 +260,14 @@ async function configureDownload(): Promise<void> {
   const button = document.querySelector<HTMLAnchorElement>("#platform-download");
   const note = document.querySelector<HTMLElement>("#platform-note");
   if (!button || !note) return;
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (mobile) {
+    button.textContent = "Open this page on a computer";
+    button.removeAttribute("href");
+    button.setAttribute("aria-disabled", "true");
+    note.textContent = "Available for macOS, Windows, and Linux.";
+    return;
+  }
   const platform: ReleasePlatform = /Mac/i.test(navigator.userAgent) ? "macos" : /Win/i.test(navigator.userAgent) ? "windows" : "linux";
   const labels = { macos: "Download for macOS", windows: "Download for Windows", linux: "Download for Linux" };
   button.textContent = labels[platform];
@@ -257,7 +312,7 @@ function renderApp(): void {
   root.innerHTML = `
     <header class="app-header"><div class="brand">${icon}<span>Mail Attachment Archive</span></div><div class="app-actions"><span class="offline-badge">● Local app</span><button class="icon-button" id="about-button" aria-label="About and license">?</button></div></header>
     <main id="main" tabindex="-1" class="workspace">
-      <section class="workspace-title"><div><p class="eyebrow">Local archive workspace</p><h1>Your attachment ledger</h1><p id="archive-subtitle">Import an MBOX file or reopen an existing archive.</p></div><div class="workspace-actions"><button class="button secondary" id="open-archive">Open archive</button><button class="button primary" id="import-mbox">Import MBOX</button></div></section>
+      <section class="workspace-title"><div><p class="eyebrow">Local archive workspace</p><h1>Your attachment ledger</h1><p id="archive-subtitle">Import an MBOX export or reopen an existing archive.</p></div><div class="workspace-actions"><button class="button secondary" id="open-archive">Open archive</button><button class="button primary" id="import-mbox">Import MBOX export</button></div></section>
       <section id="app-state" aria-live="polite"></section>
     </main>
     <dialog id="import-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">New local archive</p><h2>Choose how to store it</h2><p id="source-file"></p><label class="check-row"><input type="checkbox" id="encrypt-archive" /><span><b>Encrypt attachment files</b><small>Recommended on shared computers. Your passphrase is never stored.</small></span></label><div id="passphrase-wrap" hidden><label for="passphrase">Archive passphrase</label><input id="passphrase" type="password" minlength="10" autocomplete="new-password" /><small>At least 10 characters. Losing this passphrase means losing access.</small></div><p class="form-status" aria-live="polite"></p><button class="button primary" id="choose-location" type="button">Choose archive location</button></form></dialog>
@@ -273,7 +328,7 @@ function renderApp(): void {
 function renderEmpty(): void {
   const recents = storedLicense().valid ? recentArchives() : [];
   const recentMarkup = recents.length ? `<div class="recent-list"><p class="eyebrow">Archive Plus · recent workspaces</p>${recents.map(path => `<button data-path="${escapeHtml(path)}"><b>${escapeHtml(filename(path.replace(/[/\\]manifest\.json$/, "")))}</b><small>${escapeHtml(path)}</small></button>`).join("")}</div>` : "";
-  document.querySelector<HTMLElement>("#app-state")!.innerHTML = `<div class="empty-state"><div class="empty-geometry" aria-hidden="true"><i></i><i></i><i></i><b></b></div><h2>No archive open</h2><p>Start with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.</p><div class="empty-actions"><button class="button primary" id="empty-import">Import your first MBOX</button><button class="button secondary" id="load-sample">Load sample project</button></div><details><summary>What happens to my files?</summary><p>The app reads them locally, stores attachments as inert files, and writes a manifest plus a report beside them. Nothing is uploaded.</p></details>${recentMarkup}</div>`;
+  document.querySelector<HTMLElement>("#app-state")!.innerHTML = `<div class="empty-state"><div class="empty-geometry" aria-hidden="true"><i></i><i></i><i></i><b></b></div><h2>No archive open</h2><p>Start with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.</p><div class="empty-actions"><button class="button primary" id="empty-import">Import your first MBOX export</button><button class="button secondary" id="load-sample">Load sample archive</button></div><details><summary>What happens to my files?</summary><p>The app reads them locally, stores attachments without opening them, and writes a manifest plus a verification report beside them.</p></details>${recentMarkup}</div>`;
   document.querySelector("#empty-import")?.addEventListener("click", startImport);
   document.querySelector("#load-sample")?.addEventListener("click", renderSampleProject);
   document.querySelectorAll<HTMLButtonElement>(".recent-list button").forEach(button => button.addEventListener("click", () => loadArchivePath(button.dataset.path!)));
@@ -289,7 +344,7 @@ function renderSampleProject(): void {
   document.querySelector("#close-sample")?.addEventListener("click", () => {
     document.querySelector(".demo-banner.in-app")?.remove();
     state.id = "app-state";
-    document.querySelector<HTMLElement>("#archive-subtitle")!.textContent = "Import an MBOX file or reopen an existing archive.";
+    document.querySelector<HTMLElement>("#archive-subtitle")!.textContent = "Import an MBOX export or reopen an existing archive.";
     renderEmpty();
   });
 }

@@ -1,8 +1,8 @@
 # Demo sandbox
 
-Open `https://mail-attachment-archive.sociobot.in/demo/` or select **Try it
+Open `https://mail-attachment-archive.sociobot.in/?demo=1` or select **Try it
 with sample data** on the first screen. The desktop app also offers **Load
-sample project** before a real archive is opened.
+sample archive** before a real archive is opened.
 
 The sample represents someone leaving a work account. It contains three
 messages and four attachment references: a closing statement, a photo stored

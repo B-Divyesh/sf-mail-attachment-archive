@@ -33,13 +33,13 @@ test("@claim:demo-sandbox one click opens an isolated, resettable sample", async
   expect(await page.evaluate(() => localStorage.getItem("demo:mail-attachment-archive:state"))).toBeNull();
 
   await page.goto("/demo/");
-  await expect(page.locator("#demo-home")).toBeVisible();
-  await page.locator("#demo-home").click();
+  await expect(page.getByRole("link", { name: "Mail Attachment Archive home" })).toBeVisible();
+  await page.getByRole("link", { name: "Mail Attachment Archive home" }).click();
   await expect(page).toHaveURL(/\/$/);
   expect(await page.evaluate(() => localStorage.getItem("demo:mail-attachment-archive:state"))).toBeNull();
 });
 
-test("@claim:local-only demo flow sends no data off origin", async ({ page }) => {
+test("demo flow sends no data off origin", async ({ page }) => {
   const externalRequests: string[] = [];
   page.on("request", request => {
     if (new URL(request.url()).origin !== "http://127.0.0.1:4173") externalRequests.push(request.url());
@@ -159,6 +159,48 @@ test("cold load resolves release metadata on the same origin", async ({ page }) 
   expect(errors).toEqual([]);
 });
 
+test("Android and iPhone visitors are never offered desktop installers", async ({ browser }) => {
+  for (const userAgent of [
+    "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1"
+  ]) {
+    const context = await browser.newContext({ userAgent });
+    const page = await context.newPage();
+    await page.goto("/");
+    await expect(page.locator("#platform-download")).toHaveText("Open this page on a computer");
+    await expect(page.locator("#platform-note")).toHaveText("Available for macOS, Windows, and Linux.");
+    await expect(page.locator("#platform-download")).not.toHaveAttribute("href", /\.(AppImage|deb|dmg|exe)/i);
+    await context.close();
+  }
+});
+
+test("direct ?demo=1 opens the isolated demo, announces it, and leaves no demo storage on exit", async ({ page }) => {
+  await page.goto("/?demo=1");
+  await expect(page.getByRole("heading", { level: 1, name: "Inspect a checked attachment archive" })).toBeVisible();
+  await expect(page.getByText("Demo — sample data, nothing is saved")).toBeVisible();
+  await page.getByRole("link", { name: "Mail Attachment Archive home" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => localStorage.getItem("demo:mail-attachment-archive:state"))).toBeNull();
+});
+
+test("landing includes the captioned desktop walkthrough at desktop and phone widths", async ({ page }, testInfo) => {
+  await page.goto("/");
+  await expect(page.locator(".walkthrough figure")).toHaveCount(4);
+  await expect(page.getByText("1. Choose an MBOX export.")).toBeVisible();
+  if (testInfo.project.name === "mobile") {
+    const widths = await page.locator(".walkthrough-grid").evaluate(element => ({ scroll: element.scrollWidth, client: element.clientWidth }));
+    expect(widths.scroll).toBeLessThanOrEqual(widths.client);
+  }
+});
+
+test("document navigation moves focus to the new route heading", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Try it with sample data" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: "Prove every attachment made it." })).toBeFocused();
+});
+
 test("invalid release metadata keeps a calm, usable fallback", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
@@ -246,17 +288,17 @@ test("desktop shell exposes an actionable empty state", async ({ page }) => {
   await page.goto("/?app=1");
   await expect(page.getByRole("heading", { level: 1, name: "Your attachment ledger" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Import your first MBOX" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Load sample project" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Load sample archive" })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.filter(item => ["serious", "critical"].includes(item.impact || ""))).toEqual([]);
 });
 
-test("@claim:free-core provides import, open, sample, search, and both report formats without a license", async ({ page }) => {
+test("free app shell provides import, open, sample, search, and both report formats without a license", async ({ page }) => {
   await page.goto("/?app=1");
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
-  await expect(page.getByRole("button", { name: "Import MBOX" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Import MBOX export" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Open archive" })).toBeVisible();
-  await page.getByRole("button", { name: "Load sample project" }).click();
+  await page.getByRole("button", { name: "Load sample archive" }).click();
   await expect(page.getByLabel("Search this archive")).toBeVisible();
   await expect(page.getByRole("button", { name: "Export CSV" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Export JSON" })).toBeVisible();

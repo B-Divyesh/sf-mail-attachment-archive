@@ -653,7 +653,6 @@ fn io_error(action: &'static str) -> impl FnOnce(std::io::Error) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             import_mbox,
             load_manifest,
@@ -795,6 +794,138 @@ mod tests {
                 .filter(|a| a.status == "decode_failed")
                 .count(),
             1
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    fn fresh_claim_root(name: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "maa-{name}-{}-{}",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ))
+    }
+
+    fn write_claim_mbox(source: &Path) {
+        fs::write(source, "From owner@example.test Sat Jan 01 00:00:00 2026\nMessage-ID: <claim@example.test>\r\nSubject: Leaving work\r\nFrom: owner@example.test\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=b\r\n\r\n--b\r\nContent-Type: application/pdf; name=statement.pdf\r\nContent-Disposition: attachment; filename=statement.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\naGVsbG8=\r\n--b--\r\n").unwrap();
+    }
+
+    #[test]
+    // @claim:local-only
+    fn claim_local_only_processes_a_shipped_mbox_with_filesystem_only_output() {
+        let root = fresh_claim_root("local-only");
+        let source = root.join("leaving-account.mbox");
+        let archive = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        write_claim_mbox(&source);
+        let original_source = fs::read(&source).unwrap();
+        let imported = import_mbox(
+            source.to_string_lossy().to_string(),
+            archive.to_string_lossy().to_string(),
+            false,
+            None,
+        )
+        .unwrap();
+        let reopened =
+            load_manifest(archive.join("manifest.json").to_string_lossy().to_string()).unwrap();
+        assert_eq!(reopened.attachments.len(), 1);
+        assert!(archive.join("manifest.json").is_file());
+        assert!(archive.join("verification-report.json").is_file());
+        assert!(archive.join(&imported.attachments[0].stored_path).is_file());
+        assert_eq!(
+            fs::read(&source).unwrap(),
+            original_source,
+            "the source is read, never altered"
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    // @claim:attachments-not-opened
+    fn claim_attachments_not_opened_import_writes_only_archive_files() {
+        let root = fresh_claim_root("not-opened");
+        let source = root.join("sentinel.mbox");
+        let archive = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        write_claim_mbox(&source);
+        let manifest = import_mbox(
+            source.to_string_lossy().to_string(),
+            archive.to_string_lossy().to_string(),
+            false,
+            None,
+        )
+        .unwrap();
+        let stored = archive.join(&manifest.attachments[0].stored_path);
+        assert_eq!(fs::read(stored).unwrap(), b"hello");
+        let capabilities = fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("capabilities/default.json"),
+        )
+        .unwrap();
+        assert!(
+            !capabilities.contains("opener:"),
+            "the packaged command allowlist has no file-opening capability"
+        );
+        assert_eq!(
+            fs::read_dir(&root).unwrap().count(),
+            2,
+            "import creates only its archive beside the source MBOX"
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    // @claim:free-core
+    fn claim_free_core_completes_unlicensed_import_reopen_encryption_restore_and_reports() {
+        let root = fresh_claim_root("free-core");
+        let source = root.join("free.mbox");
+        let archive = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        write_claim_mbox(&source);
+        let passphrase = "correct horse battery staple";
+        let imported = import_mbox(
+            source.to_string_lossy().to_string(),
+            archive.to_string_lossy().to_string(),
+            true,
+            Some(passphrase.into()),
+        )
+        .unwrap();
+        let manifest_path = archive.join("manifest.json").to_string_lossy().to_string();
+        let reopened = load_manifest(manifest_path.clone()).unwrap();
+        assert!(!reopened.verification_complete);
+        let checked = verify_encrypted_archive(manifest_path.clone(), passphrase.into()).unwrap();
+        assert!(checked.verification_complete);
+        let restored = root.join("restored-statement.pdf");
+        restore_attachment(
+            manifest_path.clone(),
+            imported.attachments[0].id.clone(),
+            restored.to_string_lossy().to_string(),
+            Some(passphrase.into()),
+        )
+        .unwrap();
+        assert_eq!(fs::read(&restored).unwrap(), b"hello");
+        let csv = root.join("verification.csv");
+        let json = root.join("verification.json");
+        export_report(
+            manifest_path.clone(),
+            csv.to_string_lossy().to_string(),
+            "csv".into(),
+            Some(passphrase.into()),
+        )
+        .unwrap();
+        export_report(
+            manifest_path,
+            json.to_string_lossy().to_string(),
+            "json".into(),
+            Some(passphrase.into()),
+        )
+        .unwrap();
+        assert!(fs::read_to_string(csv).unwrap().contains("statement.pdf"));
+        assert_eq!(
+            serde_json::from_slice::<ArchiveManifest>(&fs::read(json).unwrap())
+                .unwrap()
+                .attachments
+                .len(),
+            checked.attachments.len()
         );
         fs::remove_dir_all(root).unwrap();
     }

@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Desktop archive window permissions",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:allow-open", "dialog:allow-save", "opener:default"]
+  "permissions": ["core:default", "dialog:allow-open", "dialog:allow-save"]
 }

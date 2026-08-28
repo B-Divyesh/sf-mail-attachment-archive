@@ -1,45 +1,50 @@
-# Mail Attachment Archive — adversarial review 1 handoff
+# Mail Attachment Archive — polish 1 handoff
 
 ## Outcome
 
-Completed a read-only product review and wrote `.factory/review-1.md`.
-Verdict: **FAIL** with 4 blocking, 5 major, and 21 minor findings. Product code
-was not modified.
-
-The blocking issues are incompatible desktop downloads offered to Android and
-iPhone visitors, missing desktop screenshot walkthrough, and incomplete
-observable coverage for the `local-only` and `free-core` claims.
+Repaired every finding in adversarial review 1. The landing now has phone-safe
+downloads, a direct isolated `?demo=1` route, four original captioned desktop
+workflow frames, consistent route navigation, route focus announcements,
+complete static metadata, and rewritten plain-language copy. The desktop app
+has an outcome-level free-core test and no opener capability.
 
 ## Verification
 
-From a fresh clone of `7066e0921fa27a0bd982c5519da2e0545d4f06a8`, after
-installing the README-linked Tauri Linux prerequisites:
+Fresh-dependency setup used `npm ci` and the README Tauri Linux prerequisites.
 
-```sh
-npm ci
-# Every exact command in .factory/claims.json
-npm test
-npm run check
-cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo test --manifest-path src-tauri/Cargo.toml
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-npm run build
-npm run test:e2e
-```
+- `npm test`: 16 passing.
+- `npm run check`: passing.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`: passing.
+- `cargo test --manifest-path src-tauri/Cargo.toml`: 12 passing.
+- `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`: passing.
+- `npm run build`: passing; produces `dist/site` and `dist/app`.
+- `npm run test:e2e`: 48 passing across desktop Chromium and 390 px mobile.
+- Every one of the 18 exact commands in `.factory/claims.json` passed from the
+  clean dependency install. The browser claims ran in desktop and mobile
+  contexts; native claims used temporary MBOX/archive fixtures.
 
-All 17 declared claim commands completed without a failing assertion. Full
-results: 16/16 Vitest, 9/9 Rust tests, strict TypeScript and Clippy clean, both
-production builds successful, and 38 Playwright passes with 2 expected skips.
-The live deployment verifier and live Axe scans also passed.
+The production site bundle is 41.94 KB raw / 12.74 KB gzip. CSS is 18.92 KB
+raw / 5.00 KB gzip. No external fonts or scripts were added.
 
-Manual live checks covered cold 390 px and desktop first reads, Pixel 7 and
-iPhone 13 user agents, demo reset/exit with sentinel real storage, outgoing
-requests, route metadata, 404, link crawl, focus/back behavior, responsive
-layout, visual identity, headers, caching, and release identity.
+## Key verification coverage
 
-## Next steps
+- Android and iPhone user agents receive no AppImage, DEB, DMG, or EXE link.
+- `?demo=1` renders the persistent demo banner, four realistic sample rows,
+  Reset demo, and Start for real. It uses only the `demo:` storage namespace.
+- The native free-core fixture completes encrypted import, reopen, full scan,
+  restore, CSV export, and JSON export without a license.
+- The packaged capability list has no `opener:` permission; attachment import
+  writes archive files without opening them.
+- Browser route, Back, dialog, mobile target, static metadata, and Axe tests
+  are covered by Playwright.
 
-Repair every `F-1-*` finding in `.factory/review-1.md`, add the missing mobile
-platform and outcome-level claim regressions, deploy the repaired candidate,
-and repeat the full review from scratch. No infrastructure, DNS, billing, or
-product source was changed during this review.
+## Deployment
+
+The static deployment is triggered by the factory from the pushed `main`
+commit. After push, cold-check `/?demo=1`, `/privacy/`, `/terms/`, and a 404
+before publishing the release handoff.
+
+## Known gaps
+
+None in the repair scope. Desktop release assets remain versioned through the
+existing tag workflow; this repair does not alter the released binary version.

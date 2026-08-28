@@ -1,44 +1,43 @@
 # Mail Attachment Archive
 
-Mail Attachment Archive is a local-first desktop utility for people leaving or
-backing up an email account. It turns an MBOX export into a browsable attachment
-manifest, stores duplicate files only once, and produces evidence for every
-missing, malformed, or corrupt item.
+Mail Attachment Archive is a desktop app for people leaving or backing up an
+email account. It keeps mail processing on their computer. It turns an MBOX
+export into a local attachment list. Duplicate files are stored once, and every
+failure stays in the verification report.
 
-The app does not connect to a mailbox, upload mail, execute attachments, or
-collect telemetry. The desktop core is Rust/Tauri 2; the interface and landing
-site are dependency-light Vite/TypeScript.
+The app does not connect to a mailbox, upload mail, or collect telemetry. The
+desktop app uses Rust and Tauri 2. The interface and website use Vite and
+TypeScript.
 
 ## Try the sample
 
-Open the isolated [sample archive](https://mail-attachment-archive.sociobot.in/demo/)
+Open the isolated [sample archive](https://mail-attachment-archive.sociobot.in/?demo=1)
 in one click. It contains a closing statement, a deduplicated photo, and a
 damaged contract reference. Resetting or leaving removes its separate `demo:`
-storage key. The desktop first-run screen includes **Load sample project**.
+storage key. The desktop first-run screen includes **Load sample archive**.
 
 ## What it does
 
-- Parses standard MBOX exports and MIME attachment parts locally.
+- Reads standard MBOX exports and their attached files on your computer.
 - Hashes decoded attachment bytes with SHA-256 and deduplicates identical files.
-- Stores attachments inertly as hash-named `.bin` files.
+- Stores attachments without opening them, in `.bin` files named by checksum.
 - Optionally encrypts every stored file using Argon2-derived keys and
   XChaCha20-Poly1305. Passphrases are never written to disk.
 - Re-verifies plain files when an archive is reopened. Encrypted archives show
-  no resolved score until a passphrase-gated full scan finishes.
+  no resolved score until you enter the passphrase and finish a full scan.
 - Searches by filename, sender, subject, or checksum.
-- Exports complete CSV and JSON evidence reports, including failures.
-- Safely rejects MBOX files over 256 MB before reading them into memory. Split a
-  larger export into smaller MBOX files and import each one.
+- Exports complete CSV and JSON verification reports, including failures.
+- Safely rejects MBOX exports over 256 MB before reading them into memory. Split
+  a larger export into smaller MBOX exports and import each one.
 
 This is not an inbox replacement and does not delete mail from a provider.
-Keep the source MBOX until you have reviewed the report and restored samples.
+Keep the source MBOX export until you have reviewed the verification report and restored samples.
 
 ## Install
 
 Download the detected installer at
 [mail-attachment-archive.sociobot.in](https://mail-attachment-archive.sociobot.in).
-Release binaries are currently unsigned; compare their SHA-256 hashes with the
-release `SHA256SUMS` file.
+Read the release notes and compare downloads with the release `SHA256SUMS` file.
 
 Linux/macOS:
 
@@ -89,23 +88,22 @@ archive/
     └── <sha256>.bin  (or .maa when encrypted)
 ```
 
-The manifest format is versioned. Encrypted `.maa` records start with a four
-byte `MAA1` marker, a random 16-byte salt, a random 24-byte nonce, and the
-authenticated ciphertext. Restoration fails closed if authentication or the
-recorded SHA-256 checksum does not match. New archives include an independently
-encrypted passphrase check, so a wrong passphrase is not reported as file
-corruption. A successful full scan writes an explicit verification report.
+The manifest format is versioned. Each encrypted `.maa` file starts with its
+format marker, salt, nonce, and encrypted attachment bytes. If decryption or
+the checksum fails, restoration stops without writing the destination file. New
+archives include an encrypted passphrase check, so a wrong passphrase is not
+reported as file corruption. A successful full scan writes a verification report.
 
 ## Privacy, payment, and security
 
-The free app includes import, deduplication, encryption, restoration, and all
-safety reports. Archive Plus is a $29 one-time convenience unlock verified by
-the Sociobot billing API; it does not gate accessibility, data export, or
-safety. See the hosted `/privacy/` and `/terms/` pages.
+The free app includes import, duplicate checks, encryption, restoration, and
+all verification reports. Archive Plus costs $29 once and adds workspace
+shortcuts. Import, export, accessibility, and safety features remain free. See
+the hosted `/privacy/` and `/terms/` pages.
 
-Attachments can contain malware. The app never previews or launches them. A
-restored attachment should be scanned before opening. Please report security
-issues privately to `security@sociobot.in`.
+Attachments can contain malware. The app stores attachments without opening
+them. A restored attachment should be scanned before opening. Please report
+security issues privately to `security@sociobot.in`.
 
 ## License
 
