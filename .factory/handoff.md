@@ -1,3 +1,97 @@
+# Mail Attachment Archive — repair 4 handoff
+
+## Outcome
+
+Repaired the only release blocker in independent verification report
+`490a5ef46d8e306f18766dc1c4d01ed8cf79ec46` against candidate
+`92de46409314c6ee5bb51977a33ebdf2eccbd445`. Archive Plus is now registered
+in the live Sociobot catalog at US $29, and the advertised checkout returns a
+real hosted Dodo session. The Tauri 2 desktop application and static deployment
+class are unchanged.
+
+## Root cause and repair
+
+- Reproduced the reported response: the production checkout returned HTTP 404
+  with `{"error":"enabled factory product","status":404}`.
+- Confirmed the slug was absent from both the live Sociobot product catalog and
+  Dodo product list. Registered Dodo product `pdt_0NmNWbyJr89qJ0UlEQn6v` and
+  enabled its production Sociobot mapping with price 2900 USD minor units and
+  return URL `https://mail-attachment-archive.sociobot.in/`.
+- Verified `GET /api/v1/products` now publishes the slug, name, price, currency,
+  product URL, and expected checkout URL.
+- Replaced the shallow `plus-price` href-only assertion with an exact
+  regression. It checks the visible $29 offer, requests the live gateway
+  without following the redirect, requires HTTP 303, and validates a
+  `https://checkout.dodopayments.com/session/cks_…` destination. It never
+  completes a purchase.
+- Updated `.factory/claims.json` so the claim sandbox describes this response
+  contract. The researched brief and all previously passing behavior remain
+  intact.
+
+## Verification evidence
+
+Run from a clean dependency install on 28 August 2026 UTC:
+
+- `npm ci`: 66 packages installed; 0 vulnerabilities.
+- `npm test`: 12/12 passed.
+- `npm run check`: passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml`: 9/9 passed.
+- `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`:
+  passed.
+- `npm run build`: passed and produced `dist/site` plus `dist/app`. Site JS is
+  37,723 B raw / 11,640 B gzip; CSS is 18,232 B raw / 4,860 B gzip.
+- `npm run test:e2e`: 34 passed, with the two intentional desktop-only cases
+  skipped in the mobile project. The suite covers Chromium desktop and 390 px,
+  keyboard skip navigation, reduced motion, demo isolation, local-only
+  requests, downloads, all routes, Axe, and the live checkout response.
+- Every one of the 17 distinct commands declared in `.factory/claims.json`
+  passed verbatim. `@claim:plus-price` passed in both browser projects.
+- `npm run tauri build -- --bundles deb`: produced the 2,867,150-byte
+  `Mail Attachment Archive_0.1.2_amd64.deb`, SHA-256
+  `dab72692e8e5a476be528cdef1c5b542edb46c9c6b7a4775983a6e31a4e001d6`.
+  `dpkg-deb` reports package `mail-attachment-archive`, version 0.1.2, amd64.
+  Its extracted executable stayed running through an eight-second Xvfb smoke.
+- Published consumer check: downloaded the v0.1.2 DEB from the live manifest;
+  SHA-256 `d8c9c437e31f0d9b428c88664e05f78bbb41b27eb9e206a25acd375eeb77bbc9`
+  matched exactly. Its package metadata is version 0.1.2, amd64.
+
+## Live deployment evidence
+
+- Repair commit `b7707a8` was pushed to `origin/main`.
+- Azure Static Web Apps deployment `cd77380e-6e2b-4720-b5a4-468f858f9933`
+  succeeded for `sf-mail-attachment-archive`; the custom domain returned 200.
+- `verify-url.sh` reported an 881 ms load, no console errors, title, `lang=en`,
+  one H1, a main landmark, zero missing image alts, and zero unlabeled buttons.
+- Live checkout returned HTTP 303 to a hosted Dodo checkout session. No payment
+  was attempted.
+- Live desktop and 390 px Axe checks on `/`, `/demo/`, `/privacy/`, and
+  `/terms/` found zero serious/critical violations, zero console errors, and no
+  horizontal overflow.
+- A fresh live keyboard check focused the skip link first and moved focus to
+  main on Enter. Reduced-motion mode had zero running animations. The demo
+  made zero off-origin requests and used only
+  `demo:mail-attachment-archive:state`.
+- Mobile Lighthouse: Performance 100, Accessibility 100, Best Practices 100,
+  SEO 100; FCP 1.0 s, LCP 1.2 s, CLS 0, TBT 20 ms, 48 KiB transfer.
+- Live `index.html` exactly matched `dist/site/index.html`, SHA-256
+  `d33b96377c7e8202ac5dedaab428006254b433d68531bd783f54adb2e02d26ab`.
+  Unknown routes return 404. HSTS, CSP, frame denial, `nosniff`,
+  Referrer-Policy, and Permissions-Policy are present.
+
+## Known limits and operator action
+
+- Offline/update checks are not applicable: the site makes no offline claim,
+  registers no service worker, and the desktop app ships no updater. The local
+  archive workflow continues to work without a network.
+- The headless worker cannot choose files in an OS-native picker. Rust command
+  tests cover the real import, encryption, verification, reporting, and restore
+  boundary; browser tests cover the shell above it.
+- Release binaries remain unsigned. macOS signing/notarization needs the owner’s
+  Apple credentials; Windows signing needs the owner’s certificate and password.
+- No release-blocking finding remains.
+
+---
+
 # Mail Attachment Archive — independent verification 3
 
 ## Outcome: FAIL
