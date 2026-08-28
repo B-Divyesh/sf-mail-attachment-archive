@@ -25,6 +25,7 @@ describe("release QA contracts", () => {
     const manifestBuilder = readFileSync("scripts/make-release-manifest.mjs", "utf8");
     expect(workflow.match(/ref: \$\{\{ env\.RELEASE_REF \}\}/g)).toHaveLength(3);
     expect(workflow.match(/verify:release-identity/g)).toHaveLength(3);
+    expect(workflow.match(/shell: bash/g)).toHaveLength(3);
     expect(workflow).toContain('"$(git rev-parse HEAD)"');
     expect(identityCheck).toContain('git("rev-list", "-n", "1", tag)');
     expect(identityCheck).toContain("head !== tagCommit");
@@ -38,21 +39,21 @@ describe("release QA contracts", () => {
     try {
       mkdirSync(join(directory, "src-tauri"), { recursive: true });
       mkdirSync(join(directory, "src"), { recursive: true });
-      writeFileSync(join(directory, "package.json"), JSON.stringify({ version: "0.1.3" }));
-      writeFileSync(join(directory, "package-lock.json"), JSON.stringify({ packages: { "": { version: "0.1.3" } } }));
-      writeFileSync(join(directory, "src-tauri", "tauri.conf.json"), JSON.stringify({ version: "0.1.3" }));
-      writeFileSync(join(directory, "src-tauri", "Cargo.toml"), '[package]\nversion = "0.1.3"\n');
-      writeFileSync(join(directory, "src", "main.ts"), 'const appVersion = "0.1.3";\n', { flag: "w" });
+      writeFileSync(join(directory, "package.json"), JSON.stringify({ version: "0.1.4" }));
+      writeFileSync(join(directory, "package-lock.json"), JSON.stringify({ packages: { "": { version: "0.1.4" } } }));
+      writeFileSync(join(directory, "src-tauri", "tauri.conf.json"), JSON.stringify({ version: "0.1.4" }));
+      writeFileSync(join(directory, "src-tauri", "Cargo.toml"), '[package]\nversion = "0.1.4"\n');
+      writeFileSync(join(directory, "src", "main.ts"), 'const appVersion = "0.1.4";\n', { flag: "w" });
       git("init");
       git("config", "user.email", "qa@example.test");
       git("config", "user.name", "QA");
       git("add", ".");
       git("commit", "-m", "release source");
-      git("tag", "v0.1.3");
-      expect(execFileSync("node", [verifyScript, "v0.1.3"], { cwd: directory, encoding: "utf8" })).toContain("release identity verified");
+      git("tag", "v0.1.4");
+      expect(execFileSync("node", [verifyScript, "v0.1.4"], { cwd: directory, encoding: "utf8" })).toContain("release identity verified");
       git("commit", "--allow-empty", "-m", "different source");
-      expect(() => execFileSync("node", [verifyScript, "v0.1.3"], { cwd: directory, encoding: "utf8", stdio: "pipe" }))
-        .toThrow(/does not match v0\.1\.3/);
+      expect(() => execFileSync("node", [verifyScript, "v0.1.4"], { cwd: directory, encoding: "utf8", stdio: "pipe" }))
+        .toThrow(/does not match v0\.1\.4/);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

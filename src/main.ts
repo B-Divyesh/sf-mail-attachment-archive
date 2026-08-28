@@ -14,7 +14,7 @@ const appMode = __APP_BUILD__ || new URLSearchParams(location.search).get("app")
 const demoMode = location.pathname.replace(/\/+$/, "").endsWith("/demo") || new URLSearchParams(location.search).get("demo") === "1";
 const icon = `<svg class="mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M5 11h12l5 6 5-6h12v22H5z"/><circle cx="12" cy="26" r="2"/><circle cx="22" cy="26" r="2"/><circle cx="32" cy="26" r="2"/><path d="M12 26h20"/></svg>`;
 const siteOrigin = "https://mail-attachment-archive.sociobot.in";
-const appVersion = "0.1.3";
+const appVersion = "0.1.4";
 
 if (!demoMode) captureLicense();
 

@@ -27,18 +27,18 @@ describe("same-origin release manifest", () => {
   it("generates checksums that are bound to the tagged source commit", () => {
     const directory = mkdtempSync(join(tmpdir(), "maa-release-"));
     const fixtures = [
-      "Mail.Attachment.Archive_0.1.3_aarch64.dmg",
-      "Mail.Attachment.Archive_0.1.3_x64.dmg",
-      "Mail.Attachment.Archive_0.1.3_x64-setup.exe",
-      "Mail.Attachment.Archive_0.1.3_amd64.AppImage",
-      "Mail.Attachment.Archive_0.1.3_amd64.deb"
+      "Mail.Attachment.Archive_0.1.4_aarch64.dmg",
+      "Mail.Attachment.Archive_0.1.4_x64.dmg",
+      "Mail.Attachment.Archive_0.1.4_x64-setup.exe",
+      "Mail.Attachment.Archive_0.1.4_amd64.AppImage",
+      "Mail.Attachment.Archive_0.1.4_amd64.deb"
     ];
     const sourceCommit = "0123456789abcdef0123456789abcdef01234567";
     try {
       fixtures.forEach((filename, index) => writeFileSync(join(directory, filename), `artifact-${index}`));
-      execFileSync("node", ["scripts/make-release-manifest.mjs", directory, "owner/repo", "v0.1.3", sourceCommit]);
+      execFileSync("node", ["scripts/make-release-manifest.mjs", directory, "owner/repo", "v0.1.4", sourceCommit]);
       const manifest = parseReleaseManifest(JSON.parse(readFileSync(join(directory, "latest.json"), "utf8")));
-      expect(manifest?.version).toBe("0.1.3");
+      expect(manifest?.version).toBe("0.1.4");
       expect(manifest?.source_commit).toBe(sourceCommit);
       expect(manifest?.platforms.linux.sha256).toBe(
         createHash("sha256").update("artifact-3").digest("hex")
