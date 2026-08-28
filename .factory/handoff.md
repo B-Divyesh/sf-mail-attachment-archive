@@ -124,3 +124,5 @@ Observed before final commit/deploy:
   labels passed. Its live `latest.json` reports `0.1.2` and the verified DEB
   checksum above. Local/live `index.html` SHA-256 matched exactly:
   `d33b96377c7e8202ac5dedaab428006254b433d68531bd783f54adb2e02d26ab`.
+- Final source-tree browser rerun at package version `0.1.2`: 34 Playwright
+  assertions passed and 2 expected mobile-only duplicates were skipped.
