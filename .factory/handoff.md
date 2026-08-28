@@ -61,10 +61,24 @@ Observed in this repair environment on 2026-08-28 UTC:
 
 ## Deployment and release
 
-The deployable artifact remains `dist/site/`; deployment uses the existing
-Azure Static Web Apps configuration and keeps the artifact class as a Tauri 2
-desktop application with a static landing site. Final live URL and identity
-evidence are recorded after the static upload completes.
+Deployed `dist/site/` to the existing Azure Static Web App in Central US on
+2026-08-28 UTC. The production URL is
+`https://mail-attachment-archive.sociobot.in/`.
+
+- Azure deployment `db3119f5-33fe-4521-acc2-3cc29864aecb` completed
+  successfully.
+- Live `/`, `/demo/`, `/privacy/`, and `/terms/` return 200; an unknown path
+  returns the designed 404.
+- `/opt/fleet/lib/verify-url.sh` passed against the live landing page: 877 ms
+  load, no console errors, title/lang, one H1, main landmark, and no missing
+  image alt or unlabeled buttons.
+- Local and live `index.html` SHA-256 match:
+  `c7d0d94fd779dbf23d41b8244c647d0ebcb832611a29cb567f3c8ffd93d56931`.
+- Live headers include HSTS, restrictive CSP, `nosniff`, frame denial,
+  Referrer-Policy, Permissions-Policy, and 30-second HTML revalidation.
+
+The artifact class remains a Tauri 2 desktop application with a static landing
+site. The release workflow still builds unsigned macOS/Windows/Linux artifacts.
 
 The release workflow still builds unsigned macOS/Windows/Linux artifacts. If
 the owner later wants signed desktop builds, configure `APPLE_CERTIFICATE` and
