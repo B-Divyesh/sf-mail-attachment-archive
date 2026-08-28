@@ -58,6 +58,8 @@ Observed in this repair environment on 2026-08-28 UTC:
 - The release-mode Debian package was produced at
   `src-tauri/target/release/bundle/deb/Mail Attachment Archive_0.1.2_amd64.deb`
   (2,867,516 bytes).
+- `dpkg-deb --info` reports package `mail-attachment-archive` 0.1.2 for
+  amd64; its release binary stayed running for a 10-second Xvfb smoke test.
 
 ## Deployment and release
 
