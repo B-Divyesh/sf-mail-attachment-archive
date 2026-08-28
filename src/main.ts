@@ -4,6 +4,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { captureLicense, checkoutUrl, saveLicense, storedLicense, verifyLicense } from "./license";
 import type { ArchiveManifest, AttachmentRecord } from "./types";
 import { escapeHtml, fileExt, filename, formatBytes } from "./archive-utils";
+import { parseReleaseManifest, type ReleasePlatform } from "./release-manifest";
 
 declare const __APP_BUILD__: boolean;
 
@@ -93,24 +94,29 @@ async function configureDownload(): Promise<void> {
   const button = document.querySelector<HTMLAnchorElement>("#platform-download");
   const note = document.querySelector<HTMLElement>("#platform-note");
   if (!button || !note) return;
-  const platform = /Mac/i.test(navigator.userAgent) ? "macos" : /Win/i.test(navigator.userAgent) ? "windows" : "linux";
+  const platform: ReleasePlatform = /Mac/i.test(navigator.userAgent) ? "macos" : /Win/i.test(navigator.userAgent) ? "windows" : "linux";
   const labels = { macos: "Download for macOS", windows: "Download for Windows", linux: "Download for Linux" };
   button.textContent = labels[platform];
   note.textContent = platform === "linux" ? "AppImage · Ubuntu 22.04+" : "Unsigned v0.1 · Installation help below";
-  if (["localhost", "127.0.0.1"].includes(location.hostname)) return;
   try {
-    const response = await fetch("https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/latest/download/latest.json", { cache: "no-store" });
-    if (!response.ok) return;
-    const manifest = await response.json() as { platforms?: Record<string, { url: string }> };
-    if (manifest.platforms?.[platform]?.url) button.href = manifest.platforms[platform].url;
-    if (platform === "macos" && manifest.platforms?.macos_intel?.url) {
+    const response = await fetch(new URL("./latest.json", document.baseURI), { cache: "no-cache", credentials: "same-origin" });
+    const manifest = response.ok ? parseReleaseManifest(await response.json()) : null;
+    if (!manifest) throw new Error("Release manifest unavailable");
+    button.href = manifest.platforms[platform].url;
+    button.dataset.sha256 = manifest.platforms[platform].sha256;
+    button.dataset.version = manifest.version;
+    if (platform === "macos") {
       note.textContent = "Apple Silicon · ";
       const intel = document.createElement("a");
       intel.href = manifest.platforms.macos_intel.url;
+      intel.dataset.sha256 = manifest.platforms.macos_intel.sha256;
       intel.textContent = "Intel Mac download";
       note.append(intel);
     }
-  } catch { /* release link remains a valid fallback */ }
+  } catch {
+    button.textContent = "View all releases";
+    note.textContent = "Downloads are being published";
+  }
 }
 
 function bindLicenseDialog(): void {

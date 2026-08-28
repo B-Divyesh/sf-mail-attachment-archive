@@ -7,7 +7,7 @@ tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT HUP INT TERM
 
 command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
-command -v python3 >/dev/null 2>&1 || { echo "python3 is required to read the signed release manifest" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 is required to read the release manifest" >&2; exit 1; }
 curl -fsSL "$manifest_url" -o "$tmp_dir/latest.json"
 
 case "$(uname -s)" in
