@@ -100,6 +100,11 @@ Observed before final commit/deploy:
   Windows (EXE and MSI), and Ubuntu (AppImage, DEB, and RPM) builds succeeded.
   The workflow's `manifest` job succeeded and attached `SHA256SUMS` and
   `latest.json`. The site manifest now points only at those `v0.1.2` assets.
+- Consumer-package check: downloaded
+  `Mail.Attachment.Archive_0.1.2_amd64.deb`; SHA-256 was
+  `d8c9c437e31f0d9b428c88664e05f78bbb41b27eb9e206a25acd375eeb77bbc9`,
+  exactly matching `latest.json`. `dpkg-deb -I` identifies it as
+  `mail-attachment-archive` version `0.1.2`, architecture `amd64`.
 - Local package smoke package: `Mail Attachment Archive_0.1.1_amd64.deb`,
   2,867,164 bytes. `dpkg-deb -I` reports `Version: 0.1.1`, `Architecture:
   amd64`, and the expected WebKit/GTK dependencies. The CI release package is
@@ -114,3 +119,8 @@ Observed before final commit/deploy:
   Unknown routes return HTTP 404. Live CSP, HSTS, `nosniff`, frame denial,
   Referrer-Policy, Permissions-Policy, and immutable hashed-asset caching are
   present.
+- Final `v0.1.2` deployment verification: custom-domain HTTP 200; browser load
+  760 ms; no console errors; title/lang, one H1, main, alt text, and button
+  labels passed. Its live `latest.json` reports `0.1.2` and the verified DEB
+  checksum above. Local/live `index.html` SHA-256 matched exactly:
+  `d33b96377c7e8202ac5dedaab428006254b433d68531bd783f54adb2e02d26ab`.
