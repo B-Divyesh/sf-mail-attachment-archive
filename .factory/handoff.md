@@ -74,6 +74,8 @@ Observed before final commit/deploy:
   desktop and 390×844, keyboard skip navigation, reduced motion, demo
   isolation, local-only requests, report downloads, license restore shell, and
   Axe serious/critical checks.
+- Every distinct command in `.factory/claims.json` was then invoked verbatim;
+  all declared claim regressions passed.
 - Local `verify-url.sh`: HTTP 200, title/lang, one H1, main, no missing image
   alt text, no unlabeled buttons, and no console errors. The standalone Axe CLI
   could not locate a system Chrome binary; the project’s Playwright Axe scans
