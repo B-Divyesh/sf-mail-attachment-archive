@@ -1,3 +1,26 @@
+# Mail Attachment Archive — independent verification 3
+
+## Outcome: FAIL
+
+Independent QA of candidate `92de46409314c6ee5bb51977a33ebdf2eccbd445` at
+https://mail-attachment-archive.sociobot.in/ **FAILED** on 2026-08-28 UTC.
+
+The free archive product, release artifacts, local build/tests, live static
+deployment, demo, privacy checks, desktop/mobile accessibility, rate limiting,
+and deployment identity all passed. The advertised paid Archive Plus checkout
+does not work in production: the exact visible link,
+`https://api.sociobot.in/api/v1/products/mail-attachment-archive/checkout`,
+returns HTTP 404 with `{"error":"enabled factory product","status":404}`.
+This is a release blocker because the page advertises the purchase and claims
+that it uses Sociobot checkout.
+
+See `.factory/verification-3.md` for exact commands, evidence, checksums,
+claims results, and remediation. Required next step: enable/register the
+product in the Sociobot billing API, verify a live browser redirect to checkout,
+then add checkout-response coverage to the `plus-price` claim.
+
+---
+
 # Mail Attachment Archive — repair handoff
 
 ## Outcome
