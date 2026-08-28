@@ -1,5 +1,23 @@
 # Mail Attachment Archive v0.1.0 — handoff
 
+## Independent verification 1 — **FAIL**
+
+Candidate `becaae419ab9c6ecef36abcb44fdb00c05a2f4d5` was independently tested
+against https://mail-attachment-archive.sociobot.in on 2026-08-28. It is **not
+approved for release**. The mandatory `.factory/claims.json` is absent and the
+live first screen has no one-click **Try it with sample data** demo or sandbox.
+The detailed evidence and all defects are in
+[`verification-1.md`](verification-1.md).
+
+The live HTML, primary JS, and release manifest did match the candidate build;
+the normal web smoke, accessibility, keyboard, 390 px, privacy-request,
+release-checksum, and API rate-limit checks were clean. Release blockers remain
+the missing claims/demo contract; a separate high-severity core defect is that
+encrypted archives are not checksum-verified or reported corrupt on reopen.
+
+Re-run the independent verification only after the remediations in
+`verification-1.md` are complete.
+
 ## Repair: same-origin release metadata
 
 Candidate `8a27171b8bd5f41b00c5549d731151f577d293a7` fetched
