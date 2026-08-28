@@ -1,6 +1,6 @@
 [package]
 name = "mail-attachment-archive"
-version = "0.1.0"
+version = "0.1.1"
 description = "A local, verifiable mail attachment archive"
 authors = ["Param Factory"]
 license = "MIT"

@@ -99,3 +99,14 @@ hand-authored SVGs made of nodes and checksum paths.
   email-provider symbols.”
 - License/provenance: original generated asset commissioned for this product;
   project use permitted. The site footer discloses generated imagery.
+
+### Repair derivatives and demo surface
+
+- `public/assets/social-card.webp` is a centered 1200×630 crop of the original
+  generated hero, made locally with ImageMagick on 2026-08-28. It introduces no
+  new source imagery or license.
+- `public/assets/apple-touch-icon.png` is a 180 px rasterization of the
+  hand-authored application mark.
+- The demo reuses the desktop ledger, verification ring, clipped panels, and
+  amber evidence banner. On 390 px, the exception report moves ahead of the
+  attachment list so the unresolved item is not hidden below the sample data.

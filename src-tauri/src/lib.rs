@@ -8,7 +8,7 @@ use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     fs,
     path::{Component, Path, PathBuf},
 };
@@ -52,6 +52,10 @@ pub struct ArchiveManifest {
     source_name: String,
     archive_path: String,
     encrypted: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    encryption_probe: Option<String>,
+    #[serde(skip)]
+    verification_complete: bool,
     messages: Vec<MessageRecord>,
     attachments: Vec<AttachmentRecord>,
     issues: Vec<IssueRecord>,
@@ -97,6 +101,15 @@ fn import_mbox(
             .to_owned(),
         archive_path: destination.to_string_lossy().to_string(),
         encrypted,
+        encryption_probe: if encrypted {
+            Some(hex::encode(encrypt_bytes(
+                b"mail-attachment-archive-passphrase-check-v1",
+                passphrase.as_deref().unwrap(),
+            )?))
+        } else {
+            None
+        },
+        verification_complete: true,
         messages: Vec::new(),
         attachments: Vec::new(),
         issues: Vec::new(),
@@ -199,8 +212,52 @@ fn import_mbox(
 #[tauri::command]
 fn load_manifest(manifest_path: String) -> Result<ArchiveManifest, String> {
     let path = PathBuf::from(&manifest_path);
-    let mut manifest: ArchiveManifest =
-        serde_json::from_slice(&fs::read(&path).map_err(io_error("read the manifest"))?)
+    let mut manifest = read_manifest(&path)?;
+    let root = path.parent().ok_or("The manifest has no archive folder.")?;
+    clear_scan_results(&mut manifest);
+    manifest.verification_complete = !manifest.encrypted;
+    let mut results: HashMap<String, String> = HashMap::new();
+    for attachment in &mut manifest.attachments {
+        let stored = safe_join(root, &attachment.stored_path)?;
+        let status = if !stored.is_file() {
+            "missing".to_string()
+        } else if manifest.encrypted {
+            "unverified".to_string()
+        } else if let Some(status) = results.get(&attachment.sha256) {
+            status.clone()
+        } else {
+            let bytes = fs::read(&stored).map_err(io_error("verify a stored attachment"))?;
+            let status = if hex::encode(Sha256::digest(&bytes)) == attachment.sha256 {
+                "verified".to_string()
+            } else {
+                "corrupt".to_string()
+            };
+            results.insert(attachment.sha256.clone(), status.clone());
+            status
+        };
+        attachment.status = status.clone();
+        if status == "missing" {
+            manifest.issues.push(IssueRecord {
+                message_id: Some(attachment.message_id.clone()),
+                filename: Some(attachment.filename.clone()),
+                kind: "stored_file_missing".into(),
+                detail: "The manifest points to a file that is no longer present.".into(),
+            });
+        } else if status == "corrupt" {
+            manifest.issues.push(IssueRecord {
+                message_id: Some(attachment.message_id.clone()),
+                filename: Some(attachment.filename.clone()),
+                kind: "checksum_mismatch".into(),
+                detail: "The stored bytes no longer match the import checksum.".into(),
+            });
+        }
+    }
+    Ok(manifest)
+}
+
+fn read_manifest(path: &Path) -> Result<ArchiveManifest, String> {
+    let manifest: ArchiveManifest =
+        serde_json::from_slice(&fs::read(path).map_err(io_error("read the manifest"))?)
             .map_err(|e| format!("The manifest is not valid JSON: {e}"))?;
     if manifest.version != ARCHIVE_VERSION {
         return Err(format!(
@@ -208,31 +265,84 @@ fn load_manifest(manifest_path: String) -> Result<ArchiveManifest, String> {
             manifest.version
         ));
     }
-    let root = path.parent().ok_or("The manifest has no archive folder.")?;
-    let mut checked = HashSet::new();
+    Ok(manifest)
+}
+
+fn clear_scan_results(manifest: &mut ArchiveManifest) {
+    manifest.issues.retain(|issue| {
+        !matches!(
+            issue.kind.as_str(),
+            "stored_file_missing" | "checksum_mismatch" | "encrypted_file_corrupt"
+        )
+    });
     for attachment in &mut manifest.attachments {
-        let stored = safe_join(root, &attachment.stored_path)?;
-        if !stored.is_file() {
-            attachment.status = "missing".into();
+        attachment.status = "verified".into();
+    }
+}
+
+#[tauri::command]
+fn verify_encrypted_archive(
+    manifest_path: String,
+    passphrase: String,
+) -> Result<ArchiveManifest, String> {
+    let path = PathBuf::from(&manifest_path);
+    let mut manifest = read_manifest(&path)?;
+    if !manifest.encrypted {
+        return Err("This archive is not encrypted; it is checked when opened.".into());
+    }
+    let probe = manifest.encryption_probe.as_deref().ok_or(
+        "This older encrypted archive has no passphrase check. Re-import it with this version before relying on a full scan.",
+    )?;
+    let probe_bytes = hex::decode(probe).map_err(|_| "The archive passphrase check is damaged.")?;
+    let opened = decrypt_bytes(&probe_bytes, &passphrase)
+        .map_err(|_| "The passphrase is incorrect, so no files were marked corrupt.".to_string())?;
+    if opened != b"mail-attachment-archive-passphrase-check-v1" {
+        return Err("The archive passphrase check is invalid.".into());
+    }
+
+    clear_scan_results(&mut manifest);
+    let root = path.parent().ok_or("The manifest has no archive folder.")?;
+    let mut results: HashMap<String, String> = HashMap::new();
+    for attachment in &mut manifest.attachments {
+        let status = if let Some(status) = results.get(&attachment.sha256) {
+            status.clone()
+        } else {
+            let stored = safe_join(root, &attachment.stored_path)?;
+            let status = if !stored.is_file() {
+                "missing".to_string()
+            } else {
+                let ciphertext =
+                    fs::read(&stored).map_err(io_error("verify an encrypted attachment"))?;
+                match decrypt_bytes(&ciphertext, &passphrase) {
+                    Ok(bytes) if hex::encode(Sha256::digest(&bytes)) == attachment.sha256 => {
+                        "verified".to_string()
+                    }
+                    _ => "corrupt".to_string(),
+                }
+            };
+            results.insert(attachment.sha256.clone(), status.clone());
+            status
+        };
+        attachment.status = status.clone();
+        if status != "verified" {
             manifest.issues.push(IssueRecord {
                 message_id: Some(attachment.message_id.clone()),
                 filename: Some(attachment.filename.clone()),
-                kind: "stored_file_missing".into(),
-                detail: "The manifest points to a file that is no longer present.".into(),
+                kind: if status == "missing" {
+                    "stored_file_missing".into()
+                } else {
+                    "encrypted_file_corrupt".into()
+                },
+                detail: if status == "missing" {
+                    "The manifest points to an encrypted file that is no longer present.".into()
+                } else {
+                    "The encrypted file failed authentication or its decoded bytes did not match the import checksum.".into()
+                },
             });
-        } else if !manifest.encrypted && checked.insert(attachment.sha256.clone()) {
-            let bytes = fs::read(&stored).map_err(io_error("verify a stored attachment"))?;
-            if hex::encode(Sha256::digest(&bytes)) != attachment.sha256 {
-                attachment.status = "corrupt".into();
-                manifest.issues.push(IssueRecord {
-                    message_id: Some(attachment.message_id.clone()),
-                    filename: Some(attachment.filename.clone()),
-                    kind: "checksum_mismatch".into(),
-                    detail: "The stored bytes no longer match the import checksum.".into(),
-                });
-            }
         }
     }
+    manifest.verification_complete = true;
+    write_verification_report(root, &manifest)?;
     Ok(manifest)
 }
 
@@ -271,8 +381,13 @@ fn export_report(
     manifest_path: String,
     destination_path: String,
     format: String,
+    passphrase: Option<String>,
 ) -> Result<(), String> {
-    let manifest = load_manifest(manifest_path)?;
+    let manifest = if let Some(passphrase) = passphrase {
+        verify_encrypted_archive(manifest_path, passphrase)?
+    } else {
+        load_manifest(manifest_path)?
+    };
     if format == "json" {
         return fs::write(
             destination_path,
@@ -467,6 +582,12 @@ fn write_manifest(destination: &Path, manifest: &ArchiveManifest) -> Result<(), 
         .map_err(io_error("write the verification report"))
 }
 
+fn write_verification_report(destination: &Path, manifest: &ArchiveManifest) -> Result<(), String> {
+    let data = serde_json::to_vec_pretty(manifest).map_err(|e| e.to_string())?;
+    fs::write(destination.join("verification-report.json"), data)
+        .map_err(io_error("write the verification report"))
+}
+
 fn safe_join(root: &Path, relative: &str) -> Result<PathBuf, String> {
     let path = Path::new(relative);
     if path.is_absolute()
@@ -493,6 +614,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             import_mbox,
             load_manifest,
+            verify_encrypted_archive,
             restore_attachment,
             export_report
         ])
@@ -525,7 +647,8 @@ mod tests {
     }
 
     #[test]
-    fn imports_and_deduplicates_mbox_attachments() {
+    // @claim:sha256-dedup
+    fn claim_sha256_dedup_imports_duplicate_references_once() {
         let unique = format!(
             "maa-test-{}-{}",
             std::process::id(),
@@ -548,11 +671,194 @@ mod tests {
             None,
         )
         .unwrap();
+        assert!(manifest.attachments[0].stored_path.ends_with(".bin"));
         assert_eq!(manifest.messages.len(), 2);
         assert_eq!(manifest.attachments.len(), 2);
         assert!(manifest.attachments[1].duplicate_of.is_some());
         assert_eq!(manifest.unique_bytes, 5);
         assert!(destination.join("manifest.json").is_file());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    // @claim:mbox-import
+    fn claim_mbox_import_reads_a_standard_export() {
+        let mail = b"Message-ID: <one@example.test>\r\nSubject: Account export\r\nFrom: owner@example.test\r\nContent-Type: text/plain\r\n\r\nhello";
+        let parsed = parse_mail(mail).unwrap();
+        assert_eq!(
+            parsed.headers.get_first_value("Subject").unwrap(),
+            "Account export"
+        );
+        assert_eq!(split_mbox(mail).len(), 1);
+    }
+
+    #[test]
+    // @claim:evidence-reports
+    fn claim_evidence_reports_export_csv_and_json() {
+        let unique = format!(
+            "maa-report-test-{}-{}",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        );
+        let root = std::env::temp_dir().join(unique);
+        let source = root.join("source.mbox");
+        let destination = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(
+            &source,
+            "Message-ID: <report@example.test>\r\nSubject: Report\r\nFrom: owner@example.test\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=b\r\n\r\n--b\r\nContent-Type: application/pdf; name=proof.pdf\r\nContent-Disposition: attachment; filename=proof.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\naGVsbG8=\r\n--b--\r\n",
+        )
+        .unwrap();
+        import_mbox(
+            source.to_string_lossy().to_string(),
+            destination.to_string_lossy().to_string(),
+            false,
+            None,
+        )
+        .unwrap();
+        let manifest = destination
+            .join("manifest.json")
+            .to_string_lossy()
+            .to_string();
+        let csv = root.join("report.csv");
+        let json = root.join("report.json");
+        export_report(
+            manifest.clone(),
+            csv.to_string_lossy().to_string(),
+            "csv".into(),
+            None,
+        )
+        .unwrap();
+        export_report(
+            manifest,
+            json.to_string_lossy().to_string(),
+            "json".into(),
+            None,
+        )
+        .unwrap();
+        assert!(fs::read_to_string(csv).unwrap().contains("proof.pdf"));
+        let report: ArchiveManifest = serde_json::from_slice(&fs::read(json).unwrap()).unwrap();
+        assert_eq!(report.attachments.len(), 1);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    // @claim:encrypted-integrity
+    fn claim_encrypted_integrity_on_reopen_reports_corruption() {
+        let unique = format!(
+            "maa-encrypted-test-{}-{}",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        );
+        let root = std::env::temp_dir().join(unique);
+        let source = root.join("leaving-account.mbox");
+        let destination = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(
+            &source,
+            "From sender@example.test Sat Jan 01 00:00:00 2026\nMessage-ID: <encrypted-one>\r\nSubject: Final statement\r\nFrom: accounts@example.test\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=bound\r\n\r\n--bound\r\nContent-Type: text/plain\r\n\r\nhello\r\n--bound\r\nContent-Type: application/pdf; name=statement.pdf\r\nContent-Disposition: attachment; filename=statement.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\naGVsbG8=\r\n--bound--\r\n",
+        )
+        .unwrap();
+        let imported = import_mbox(
+            source.to_string_lossy().to_string(),
+            destination.to_string_lossy().to_string(),
+            true,
+            Some("correct horse battery staple".into()),
+        )
+        .unwrap();
+        let serialized = fs::read_to_string(destination.join("manifest.json")).unwrap();
+        assert!(!serialized.contains("correct horse battery staple"));
+        let manifest_path = destination.join("manifest.json");
+        let reopened = load_manifest(manifest_path.to_string_lossy().to_string()).unwrap();
+        assert!(!reopened.verification_complete);
+        assert_eq!(reopened.attachments[0].status, "unverified");
+
+        let checked = verify_encrypted_archive(
+            manifest_path.to_string_lossy().to_string(),
+            "correct horse battery staple".into(),
+        )
+        .unwrap();
+        assert!(checked.verification_complete);
+        assert_eq!(checked.attachments[0].status, "verified");
+
+        let stored = destination.join(&imported.attachments[0].stored_path);
+        let mut damaged = fs::read(&stored).unwrap();
+        let last = damaged.len() - 1;
+        damaged[last] ^= 0xff;
+        fs::write(&stored, damaged).unwrap();
+
+        let wrong = verify_encrypted_archive(
+            manifest_path.to_string_lossy().to_string(),
+            "wrong password that is long".into(),
+        )
+        .unwrap_err();
+        assert!(wrong.contains("passphrase is incorrect"));
+
+        let damaged = verify_encrypted_archive(
+            manifest_path.to_string_lossy().to_string(),
+            "correct horse battery staple".into(),
+        )
+        .unwrap();
+        assert_eq!(damaged.attachments[0].status, "corrupt");
+        assert!(damaged
+            .issues
+            .iter()
+            .any(|issue| issue.kind == "encrypted_file_corrupt"));
+        let report = fs::read_to_string(destination.join("verification-report.json")).unwrap();
+        assert!(report.contains("encrypted_file_corrupt"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    // @claim:restore-integrity
+    fn claim_restore_integrity_checks_bytes_before_writing() {
+        let unique = format!(
+            "maa-restore-test-{}-{}",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        );
+        let root = std::env::temp_dir().join(unique);
+        let source = root.join("source.mbox");
+        let archive = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(
+            &source,
+            "Message-ID: <restore@example.test>\r\nSubject: Restore\r\nFrom: owner@example.test\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=b\r\n\r\n--b\r\nContent-Type: application/pdf; name=proof.pdf\r\nContent-Disposition: attachment; filename=proof.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\naGVsbG8=\r\n--b--\r\n",
+        )
+        .unwrap();
+        let manifest = import_mbox(
+            source.to_string_lossy().to_string(),
+            archive.to_string_lossy().to_string(),
+            false,
+            None,
+        )
+        .unwrap();
+        assert!(manifest.attachments[0].stored_path.ends_with(".bin"));
+        let manifest_path = archive.join("manifest.json").to_string_lossy().to_string();
+        let restored = root.join("proof.pdf");
+        restore_attachment(
+            manifest_path.clone(),
+            manifest.attachments[0].id.clone(),
+            restored.to_string_lossy().to_string(),
+            None,
+        )
+        .unwrap();
+        assert_eq!(fs::read(&restored).unwrap(), b"hello");
+
+        fs::write(
+            archive.join(&manifest.attachments[0].stored_path),
+            b"damaged",
+        )
+        .unwrap();
+        let rejected = root.join("rejected.pdf");
+        assert!(restore_attachment(
+            manifest_path,
+            manifest.attachments[0].id.clone(),
+            rejected.to_string_lossy().to_string(),
+            None,
+        )
+        .is_err());
+        assert!(!rejected.exists());
         fs::remove_dir_all(root).unwrap();
     }
 }

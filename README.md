@@ -9,6 +9,13 @@ The app does not connect to a mailbox, upload mail, execute attachments, or
 collect telemetry. The desktop core is Rust/Tauri 2; the interface and landing
 site are dependency-light Vite/TypeScript.
 
+## Try the sample
+
+Open the isolated [sample archive](https://mail-attachment-archive.sociobot.in/demo/)
+in one click. It contains a closing statement, a deduplicated photo, and a
+damaged contract reference. Resetting or leaving removes its separate `demo:`
+storage key. The desktop first-run screen includes **Load sample project**.
+
 ## What it does
 
 - Parses standard MBOX exports and MIME attachment parts locally.
@@ -16,8 +23,8 @@ site are dependency-light Vite/TypeScript.
 - Stores attachments inertly as hash-named `.bin` files.
 - Optionally encrypts every stored file using Argon2-derived keys and
   XChaCha20-Poly1305. Passphrases are never written to disk.
-- Re-verifies unencrypted files when an archive is reopened and verifies every
-  file before restoration.
+- Re-verifies plain files when an archive is reopened. Encrypted archives show
+  no resolved score until a passphrase-gated full scan finishes.
 - Searches by filename, sender, subject, or checksum.
 - Exports a complete CSV/JSON-compatible evidence report, including failures.
 
@@ -60,6 +67,7 @@ npm test
 npm run check
 cargo test --manifest-path src-tauri/Cargo.toml
 npm run build        # dist/site and dist/app
+npm run test:e2e     # Chromium desktop and 390 px
 ```
 
 The deployable static site is exactly `dist/site/`. `npm run build:site`
@@ -82,7 +90,9 @@ archive/
 The manifest format is versioned. Encrypted `.maa` records start with a four
 byte `MAA1` marker, a random 16-byte salt, a random 24-byte nonce, and the
 authenticated ciphertext. Restoration fails closed if authentication or the
-recorded SHA-256 checksum does not match.
+recorded SHA-256 checksum does not match. New archives include an independently
+encrypted passphrase check, so a wrong passphrase is not reported as file
+corruption. A successful full scan writes an explicit verification report.
 
 ## Privacy, payment, and security
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseReleaseManifest, releasePlatforms } from "../src/release-manifest";
 
 describe("same-origin release manifest", () => {
-  it("keeps an installable, checksummed asset for every supported platform", () => {
+  it("@claim:release-assets keeps a checksummed asset for every supported platform", () => {
     const manifest = parseReleaseManifest(JSON.parse(readFileSync("public/latest.json", "utf8")));
     expect(manifest).not.toBeNull();
     expect(Object.keys(manifest!.platforms).sort()).toEqual([...releasePlatforms].sort());

@@ -1,0 +1,19 @@
+From accounts@northstar.example Thu Aug 20 09:00:00 2026
+Message-ID: <final-statement@northstar.example>
+Subject: Your final statement
+From: Northstar Accounts <accounts@northstar.example>
+Date: Thu, 20 Aug 2026 09:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=sample-boundary
+
+--sample-boundary
+Content-Type: text/plain; charset=utf-8
+
+Your closing statement is attached for your records.
+--sample-boundary
+Content-Type: application/pdf; name=closing-statement.pdf
+Content-Disposition: attachment; filename=closing-statement.pdf
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKJSBTYW1wbGUgY2xvc2luZyBzdGF0ZW1lbnQKJSVFT0YK
+--sample-boundary--

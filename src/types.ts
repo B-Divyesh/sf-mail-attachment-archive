@@ -7,7 +7,7 @@ export interface AttachmentRecord {
   sha256: string;
   stored_path: string;
   duplicate_of: string | null;
-  status: "verified" | "missing" | "corrupt";
+  status: "verified" | "missing" | "corrupt" | "unverified";
 }
 
 export interface MessageRecord {
@@ -31,6 +31,7 @@ export interface ArchiveManifest {
   source_name: string;
   archive_path: string;
   encrypted: boolean;
+  verification_complete?: boolean;
   messages: MessageRecord[];
   attachments: AttachmentRecord[];
   issues: IssueRecord[];

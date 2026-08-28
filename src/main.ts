@@ -5,17 +5,20 @@ import { captureLicense, checkoutUrl, saveLicense, storedLicense, verifyLicense 
 import type { ArchiveManifest, AttachmentRecord } from "./types";
 import { escapeHtml, fileExt, filename, formatBytes } from "./archive-utils";
 import { parseReleaseManifest, type ReleasePlatform } from "./release-manifest";
+import { demoCsv, demoManifest, demoStorageKey } from "./demo";
 
 declare const __APP_BUILD__: boolean;
 
 const root = document.querySelector<HTMLDivElement>("#app")!;
 const appMode = __APP_BUILD__ || new URLSearchParams(location.search).get("app") === "1";
+const demoMode = location.pathname.replace(/\/+$/, "").endsWith("/demo") || new URLSearchParams(location.search).get("demo") === "1";
 const icon = `<svg class="mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M5 11h12l5 6 5-6h12v22H5z"/><circle cx="12" cy="26" r="2"/><circle cx="22" cy="26" r="2"/><circle cx="32" cy="26" r="2"/><path d="M12 26h20"/></svg>`;
 
-captureLicense();
+if (!demoMode) captureLicense();
 
 if (location.pathname.replace(/\/+$/, "").endsWith("/privacy")) renderLegal("privacy");
 else if (location.pathname.replace(/\/+$/, "").endsWith("/terms")) renderLegal("terms");
+else if (demoMode) renderDemo();
 else if (appMode) renderApp();
 else renderSite();
 
@@ -25,26 +28,27 @@ function renderLegal(page: "privacy" | "terms"): void {
   const content = privacy
     ? `<p class="eyebrow">Effective 28 August 2026</p><h1>Privacy, in plain language</h1><p><strong>Your mailbox, messages, attachments, hashes, and reports stay on your computer.</strong> Mail Attachment Archive has no user account, telemetry, advertising, or analytics SDK.</p><h2>Local archive data</h2><p>The desktop app reads files you explicitly choose and writes an archive to a folder you explicitly choose. It does not upload mail data. Optional encryption derives a key from your passphrase on-device; the passphrase is not stored.</p><h2>License verification</h2><p>If you buy or restore Archive Plus, only your license token is sent to Sociobot’s billing API at most once per day. Mail data is never part of this request.</p><h2>Website</h2><p>The landing page sets no tracking cookies and loads no third-party scripts, fonts, pixels, or analytics.</p><h2>Contact</h2><p>Email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p>`
     : `<p class="eyebrow">Effective 28 August 2026</p><h1>Terms of use</h1><p>Mail Attachment Archive is a local utility for creating and verifying attachment archives from mail exports you control.</p><h2>Your responsibility</h2><p>You must have the right to process the mail you import. Keep an independent source copy until you have inspected the report. Attachments remain potentially harmful if restored and opened.</p><h2>No silent promises</h2><p>“Resolved” means decoded bytes were stored locally and matched their SHA-256 checksum, not that the content is safe or semantically complete.</p><h2>Archive Plus</h2><p>Archive Plus costs <strong>US $29 once</strong> and adds recent archive shortcuts and a compact ledger. Core importing, deduplication, encryption, restoration, and reports are free. Sociobot/Dodo is the merchant of record; refunds revoke the license.</p><h2>Warranty</h2><p>The software is provided “as is,” to the extent permitted by law. These terms do not limit rights that cannot legally be limited.</p><h2>Contact</h2><p>Email <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p>`;
-  root.innerHTML = `<header class="legal-header"><a class="brand" href="../">${icon}<span>Mail Attachment Archive</span></a></header><main id="main" class="legal-main">${content}</main><footer><a href="../${privacy ? "terms" : "privacy"}/">${privacy ? "Terms" : "Privacy"}</a></footer>`;
+  root.innerHTML = `<header class="legal-header"><a class="brand" href="../">${icon}<span>Mail Attachment Archive</span></a></header><main id="main" tabindex="-1" class="legal-main">${content}</main><footer><a href="../${privacy ? "terms" : "privacy"}/">${privacy ? "Terms" : "Privacy"}</a></footer>`;
 }
 
 function renderSite(): void {
   root.innerHTML = `
     <header class="site-header">
       <a class="brand" href="./" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a>
-      <nav aria-label="Primary"><a href="#proof">How it works</a><a href="#price">Pricing</a><a href="#download">Download</a></nav>
+      <nav aria-label="Primary"><a href="/demo/">Demo</a><a href="#proof">How it works</a><a href="#price">Pricing</a><a href="#download">Download</a></nav>
     </header>
-    <main id="main">
+    <main id="main" tabindex="-1">
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow"><span class="status-dot"></span> Local by design · No mailbox login</p>
           <h1>Prove every attachment made it.</h1>
-          <p class="lede">Turn an MBOX export into a browsable, deduplicated archive—with a checksum and an honest report for every file that did not resolve.</p>
+          <p class="lede">For people leaving or backing up an email account, it turns an MBOX export into a checked local archive.</p>
           <div class="hero-actions" id="download">
-            <a class="button primary" id="platform-download" href="https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/latest">Download for your computer</a>
-            <span class="download-note" id="platform-note">Free core app · Private and offline</span>
+            <a class="button primary" href="/demo/">Try it with sample data</a>
+            <span class="download-note">Opens a separate demo. Nothing is saved.</span>
           </div>
-          <ul class="trust-list" aria-label="Product assurances"><li>Mail stays on your device</li><li>Duplicates stored once</li><li>Failures are never hidden</li></ul>
+          <ul class="trust-list" aria-label="Product facts"><li>Mail stays on your device</li><li>Core archive tools are free</li><li>Works without a mailbox login</li></ul>
+          <div class="download-row"><a class="text-button" id="platform-download" href="https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/latest">Download for your computer</a><span class="download-note" id="platform-note">Free core app</span></div>
         </div>
         <figure class="hero-art">
           <picture>
@@ -56,7 +60,7 @@ function renderSite(): void {
       </section>
 
       <section class="proof" id="proof" aria-labelledby="proof-title">
-        <div class="section-intro"><p class="eyebrow">The evidence pass</p><h2 id="proof-title">A backup you can interrogate</h2><p>A mailbox blob can exist while its useful files are missing. This archive makes each claim inspectable.</p></div>
+        <div class="section-intro"><p class="eyebrow">The evidence pass</p><h2 id="proof-title">A backup you can interrogate</h2><p>A mailbox blob can exist while its useful files are missing. This archive makes each result inspectable.</p></div>
         <ol class="process">
           <li><span>01</span><h3>Import the export</h3><p>Choose a standard MBOX file. The app reads messages locally and never connects to your email account.</p></li>
           <li><span>02</span><h3>Resolve and hash</h3><p>Attachments are decoded, SHA-256 hashed, and stored once—even when the same file appears in many threads.</p></li>
@@ -65,7 +69,7 @@ function renderSite(): void {
       </section>
 
       <section class="ledger-demo" aria-labelledby="ledger-title">
-        <div class="ledger-head"><div><p class="eyebrow">Offline archive</p><h2 id="ledger-title">See the files, not just the mailbox</h2></div><div class="score"><strong>99.4%</strong><span>references resolved</span></div></div>
+        <div class="ledger-head"><div><p class="eyebrow">Sample archive</p><h2 id="ledger-title">See the files, not just the mailbox</h2></div><div class="score"><strong>3 of 4</strong><span>sample references resolved</span></div></div>
         <div class="sample-ledger" role="table" aria-label="Example attachment manifest">
           <div class="row row-head" role="row"><span role="columnheader">Attachment</span><span role="columnheader">Message</span><span role="columnheader">Checksum</span><span role="columnheader">Status</span></div>
           <div class="row" role="row"><span role="cell"><b>closing-statement.pdf</b><small>1.8 MB · PDF</small></span><span role="cell">Your final statement</span><span role="cell" class="hash">9f8d…7a20</span><span role="cell" class="verified">✓ Verified</span></div>
@@ -88,6 +92,71 @@ function renderSite(): void {
 
   void configureDownload();
   bindLicenseDialog();
+}
+
+function renderDemo(): void {
+  document.title = "Demo — Mail Attachment Archive";
+  localStorage.setItem(demoStorageKey, JSON.stringify({ startedAt: new Date().toISOString() }));
+  root.innerHTML = `
+    <div class="demo-banner" role="status"><strong>Demo — sample data, nothing is saved</strong><span id="demo-notice" aria-live="polite"></span><div><button class="text-button" id="reset-demo">Reset demo</button><a class="button secondary" id="leave-demo" href="/#download">Start for real</a></div></div>
+    <header class="app-header"><a class="brand" href="/" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a><span class="offline-badge">● Sample archive</span></header>
+    <main id="main" tabindex="-1" class="workspace demo-workspace">
+      <section class="workspace-title"><div><p class="eyebrow">Leaving-account sample</p><h1>Inspect a checked attachment archive</h1><p id="archive-subtitle">leaving-work-account.mbox · four attachment references</p></div></section>
+      <section id="demo-state"></section>
+    </main>
+    <footer><p>Demo data is embedded in this page and uses only the <code>demo:</code> storage namespace.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><small>Mail Attachment Archive · v0.1.1</small></footer>`;
+  renderDemoArchive();
+  document.querySelector("#reset-demo")?.addEventListener("click", () => {
+    localStorage.removeItem(demoStorageKey);
+    localStorage.setItem(demoStorageKey, JSON.stringify({ startedAt: new Date().toISOString() }));
+    renderDemoArchive();
+    document.querySelector<HTMLElement>("#demo-notice")!.textContent = "Sample restored.";
+  });
+  document.querySelector("#leave-demo")?.addEventListener("click", () => localStorage.removeItem(demoStorageKey));
+}
+
+function renderDemoArchive(): void {
+  const resolved = demoManifest.attachments.filter(item => item.status === "verified").length;
+  const duplicateCount = demoManifest.attachments.filter(item => item.duplicate_of).length;
+  document.querySelector<HTMLElement>("#demo-state")!.innerHTML = `
+    <section class="summary-strip" aria-label="Sample archive summary"><div><span>Messages</span><strong>${demoManifest.messages.length}</strong></div><div><span>Attachment references</span><strong>${demoManifest.attachments.length}</strong></div><div><span>Duplicates</span><strong>${duplicateCount}</strong></div><div class="resolution"><span>Resolved locally</span><strong>${resolved} of ${demoManifest.attachments.length}</strong></div></section>
+    <section class="archive-tools"><label for="demo-search">Search this archive</label><input id="demo-search" type="search" placeholder="Filename, sender, subject, or checksum" /><select id="demo-filter" aria-label="Filter by status"><option value="all">All statuses</option><option value="verified">Verified</option><option value="duplicate">Duplicates</option><option value="issue">Needs attention</option></select><button class="button secondary" id="demo-export">Export CSV</button></section>
+    <div class="archive-grid"><section class="manifest-panel" aria-labelledby="demo-manifest-title"><div class="panel-title"><div><p class="eyebrow">Attachment manifest</p><h2 id="demo-manifest-title">Files and references</h2></div><span id="demo-visible-count">4 shown</span></div><div class="attachment-list" id="demo-list"></div></section>
+    <aside class="verification-panel" aria-labelledby="demo-verification-title"><p class="eyebrow">Verification report</p><h2 id="demo-verification-title">1 item needs attention</h2><div class="resolution-ring" style="--score:75"><strong>75.0%</strong><span>resolved</span></div><dl><div><dt>Source bytes</dt><dd>${formatBytes(demoManifest.total_bytes)}</dd></div><div><dt>Stored once</dt><dd>${formatBytes(demoManifest.unique_bytes)}</dd></div><div><dt>Space avoided</dt><dd>${formatBytes(demoManifest.total_bytes - demoManifest.unique_bytes)}</dd></div><div><dt>Storage</dt><dd>Plain local files</dd></div></dl><p class="issue-copy"><strong>signed-contract.docx</strong><br />Source data ended before decoding finished. The report keeps this failure visible.</p></aside></div>`;
+  const search = document.querySelector<HTMLInputElement>("#demo-search")!;
+  const filter = document.querySelector<HTMLSelectElement>("#demo-filter")!;
+  const update = (): void => {
+    const query = search.value.toLowerCase();
+    const messages = new Map(demoManifest.messages.map(message => [message.id, message]));
+    const rows = demoManifest.attachments.filter(attachment => {
+      const message = messages.get(attachment.message_id);
+      const haystack = `${attachment.filename} ${attachment.sha256} ${message?.subject ?? ""} ${message?.from ?? ""}`.toLowerCase();
+      const matchesStatus = filter.value === "all" || filter.value === "duplicate" && Boolean(attachment.duplicate_of) || filter.value === "issue" && attachment.status !== "verified" || filter.value === attachment.status;
+      return haystack.includes(query) && matchesStatus;
+    });
+    renderDemoRows(rows);
+  };
+  search.addEventListener("input", update);
+  filter.addEventListener("change", update);
+  document.querySelector("#demo-export")?.addEventListener("click", () => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([demoCsv()], { type: "text/csv;charset=utf-8" }));
+    link.download = "sample-attachment-verification.csv";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+  renderDemoRows(demoManifest.attachments);
+}
+
+function renderDemoRows(rows: AttachmentRecord[]): void {
+  const messages = new Map(demoManifest.messages.map(message => [message.id, message]));
+  document.querySelector<HTMLElement>("#demo-visible-count")!.textContent = `${rows.length} shown`;
+  document.querySelector<HTMLElement>("#demo-list")!.innerHTML = rows.length ? rows.map(attachment => {
+    const message = messages.get(attachment.message_id);
+    const state = attachment.status !== "verified" ? `<span class="failed">! Reported</span>` : attachment.duplicate_of ? `<span class="deduped">↳ Duplicate</span>` : `<span class="verified">✓ Verified</span>`;
+    const hash = attachment.sha256 ? `${attachment.sha256.slice(0, 8)}…${attachment.sha256.slice(-6)}` : "No checksum";
+    return `<article class="attachment-row"><div class="file-main"><span class="file-icon">${fileExt(attachment.filename)}</span><span><b>${escapeHtml(attachment.filename)}</b><small>${escapeHtml(message?.subject ?? "Unknown message")} · ${formatBytes(attachment.size)}</small></span></div><code title="SHA-256 ${escapeHtml(attachment.sha256)}">${escapeHtml(hash)}</code>${state}</article>`;
+  }).join("") : `<div class="no-results"><p>No sample attachments match these filters.</p></div>`;
 }
 
 async function configureDownload(): Promise<void> {
@@ -134,13 +203,13 @@ function bindLicenseDialog(): void {
 
 function renderApp(): void {
   root.innerHTML = `
-    <header class="app-header"><div class="brand">${icon}<span>Mail Attachment Archive</span></div><div class="app-actions"><span class="offline-badge">● Offline</span><button class="icon-button" id="about-button" aria-label="About and license">?</button></div></header>
-    <main id="main" class="workspace">
+    <header class="app-header"><div class="brand">${icon}<span>Mail Attachment Archive</span></div><div class="app-actions"><span class="offline-badge">● Local app</span><button class="icon-button" id="about-button" aria-label="About and license">?</button></div></header>
+    <main id="main" tabindex="-1" class="workspace">
       <section class="workspace-title"><div><p class="eyebrow">Local archive workspace</p><h1>Your attachment ledger</h1><p id="archive-subtitle">Import an MBOX file or reopen an existing archive.</p></div><div class="workspace-actions"><button class="button secondary" id="open-archive">Open archive</button><button class="button primary" id="import-mbox">Import MBOX</button></div></section>
       <section id="app-state" aria-live="polite"></section>
     </main>
     <dialog id="import-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">New local archive</p><h2>Choose how to store it</h2><p id="source-file"></p><label class="check-row"><input type="checkbox" id="encrypt-archive" /><span><b>Encrypt attachment files</b><small>Recommended on shared computers. Your passphrase is never stored.</small></span></label><div id="passphrase-wrap" hidden><label for="passphrase">Archive passphrase</label><input id="passphrase" type="password" minlength="10" autocomplete="new-password" /><small>At least 10 characters. Losing this passphrase means losing access.</small></div><p class="form-status" aria-live="polite"></p><button class="button primary" id="choose-location" type="button">Choose archive location</button></form></dialog>
-    <dialog id="about-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">Version 0.1.0</p><h2>Private by construction</h2><p>No telemetry, accounts, or remote processing. Archive Plus licenses are checked at most once per day; the free archive never waits on that check.</p><p id="license-status"></p><a class="button secondary" href="${checkoutUrl}">Buy Archive Plus · $29</a></form></dialog>`;
+    <dialog id="about-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">Version 0.1.1</p><h2>Private by construction</h2><p>No telemetry, accounts, or remote processing. Archive Plus licenses are checked at most once per day; the free archive never waits on that check.</p><p id="license-status"></p><a class="button secondary" href="${checkoutUrl}">Buy Archive Plus · $29</a></form></dialog>`;
 
   renderEmpty();
   bindAppActions();
@@ -150,9 +219,25 @@ function renderApp(): void {
 function renderEmpty(): void {
   const recents = storedLicense().valid ? recentArchives() : [];
   const recentMarkup = recents.length ? `<div class="recent-list"><p class="eyebrow">Archive Plus · recent workspaces</p>${recents.map(path => `<button data-path="${escapeHtml(path)}"><b>${escapeHtml(filename(path.replace(/[/\\]manifest\.json$/, "")))}</b><small>${escapeHtml(path)}</small></button>`).join("")}</div>` : "";
-  document.querySelector<HTMLElement>("#app-state")!.innerHTML = `<div class="empty-state"><div class="empty-geometry" aria-hidden="true"><i></i><i></i><i></i><b></b></div><h2>No archive open</h2><p>Start with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.</p><button class="button primary" id="empty-import">Import your first MBOX</button><details><summary>What happens to my files?</summary><p>The app reads them locally, stores attachments as inert files, and writes a manifest plus a report beside them. Nothing is uploaded.</p></details>${recentMarkup}</div>`;
+  document.querySelector<HTMLElement>("#app-state")!.innerHTML = `<div class="empty-state"><div class="empty-geometry" aria-hidden="true"><i></i><i></i><i></i><b></b></div><h2>No archive open</h2><p>Start with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.</p><div class="empty-actions"><button class="button primary" id="empty-import">Import your first MBOX</button><button class="button secondary" id="load-sample">Load sample project</button></div><details><summary>What happens to my files?</summary><p>The app reads them locally, stores attachments as inert files, and writes a manifest plus a report beside them. Nothing is uploaded.</p></details>${recentMarkup}</div>`;
   document.querySelector("#empty-import")?.addEventListener("click", startImport);
+  document.querySelector("#load-sample")?.addEventListener("click", renderSampleProject);
   document.querySelectorAll<HTMLButtonElement>(".recent-list button").forEach(button => button.addEventListener("click", () => loadArchivePath(button.dataset.path!)));
+}
+
+function renderSampleProject(): void {
+  const state = document.querySelector<HTMLElement>("#app-state")!;
+  state.id = "demo-state";
+  state.insertAdjacentHTML("beforebegin", `<div class="demo-banner in-app" role="status"><strong>Demo — sample data, nothing is saved</strong><div><button class="text-button" id="reset-sample">Reset demo</button><button class="button secondary" id="close-sample">Start for real</button></div></div>`);
+  document.querySelector<HTMLElement>("#archive-subtitle")!.textContent = "leaving-work-account.mbox · four attachment references";
+  renderDemoArchive();
+  document.querySelector("#reset-sample")?.addEventListener("click", renderDemoArchive);
+  document.querySelector("#close-sample")?.addEventListener("click", () => {
+    document.querySelector(".demo-banner.in-app")?.remove();
+    state.id = "app-state";
+    document.querySelector<HTMLElement>("#archive-subtitle")!.textContent = "Import an MBOX file or reopen an existing archive.";
+    renderEmpty();
+  });
 }
 
 function bindAppActions(): void {
@@ -167,6 +252,7 @@ function bindAppActions(): void {
 
 let pendingMbox = "";
 let currentManifestPath = "";
+let currentArchivePassphrase: string | null = null;
 
 async function startImport(): Promise<void> {
   try {
@@ -195,6 +281,7 @@ async function runImport(): Promise<void> {
   try {
     const manifest = await invoke<ArchiveManifest>("import_mbox", { sourcePath: pendingMbox, destinationPath: destination, encrypted, passphrase: encrypted ? passphrase : null });
     currentManifestPath = `${destination}/manifest.json`;
+    currentArchivePassphrase = encrypted ? passphrase : null;
     renderArchive(manifest);
   } catch (error) { renderError("The import could not be completed", error); }
 }
@@ -209,6 +296,7 @@ async function openArchive(): Promise<void> {
 
 async function loadArchivePath(path: string): Promise<void> {
   currentManifestPath = path;
+  currentArchivePassphrase = null;
   const manifest = await invoke<ArchiveManifest>("load_manifest", { manifestPath: currentManifestPath });
   renderArchive(manifest);
 }
@@ -227,13 +315,15 @@ function renderError(title: string, error: unknown): void {
 function renderArchive(manifest: ArchiveManifest): void {
   const resolved = manifest.attachments.filter(a => a.status === "verified").length;
   const percent = manifest.attachments.length ? (resolved / manifest.attachments.length * 100).toFixed(1) : "100.0";
+  const requiresVerification = manifest.encrypted && manifest.verification_complete === false;
+  const score = requiresVerification ? "Not checked" : `${percent}%`;
   const duplicateCount = manifest.attachments.filter(a => a.duplicate_of).length;
   document.querySelector<HTMLElement>("#archive-subtitle")!.textContent = `${manifest.source_name} · created ${new Date(manifest.created_at).toLocaleString()}`;
   document.querySelector<HTMLElement>("#app-state")!.innerHTML = `
-    <section class="summary-strip" aria-label="Archive summary"><div><span>Messages</span><strong>${manifest.messages.length.toLocaleString()}</strong></div><div><span>Attachment references</span><strong>${manifest.attachments.length.toLocaleString()}</strong></div><div><span>Duplicates</span><strong>${duplicateCount.toLocaleString()}</strong></div><div class="resolution"><span>Resolved locally</span><strong>${percent}%</strong></div></section>
+    <section class="summary-strip" aria-label="Archive summary"><div><span>Messages</span><strong>${manifest.messages.length.toLocaleString()}</strong></div><div><span>Attachment references</span><strong>${manifest.attachments.length.toLocaleString()}</strong></div><div><span>Duplicates</span><strong>${duplicateCount.toLocaleString()}</strong></div><div class="resolution"><span>Resolved locally</span><strong>${score}</strong></div></section>
     <section class="archive-tools"><label for="archive-search">Search this archive</label><input id="archive-search" type="search" placeholder="Filename, sender, subject, or checksum" /><select id="status-filter" aria-label="Filter by status"><option value="all">All statuses</option><option value="verified">Verified</option><option value="duplicate">Duplicates</option><option value="issue">Needs attention</option></select>${storedLicense().valid ? `<button class="button secondary" id="compact-ledger" aria-pressed="false">Compact</button>` : ""}<button class="button secondary" id="export-report">Export report</button></section>
     <div class="archive-grid"><section class="manifest-panel" aria-labelledby="manifest-title"><div class="panel-title"><div><p class="eyebrow">Attachment manifest</p><h2 id="manifest-title">Files and references</h2></div><span id="visible-count">${manifest.attachments.length} shown</span></div><div class="attachment-list" id="attachment-list"></div></section>
-    <aside class="verification-panel" aria-labelledby="verification-title"><p class="eyebrow">Verification</p><h2 id="verification-title">${manifest.issues.length ? `${manifest.issues.length} items need attention` : "Every decoded file is accounted for"}</h2><div class="resolution-ring" style="--score:${percent}"><strong>${percent}%</strong><span>resolved</span></div><dl><div><dt>Source bytes</dt><dd>${formatBytes(manifest.total_bytes)}</dd></div><div><dt>Stored once</dt><dd>${formatBytes(manifest.unique_bytes)}</dd></div><div><dt>Space avoided</dt><dd>${formatBytes(Math.max(0, manifest.total_bytes - manifest.unique_bytes))}</dd></div><div><dt>Storage</dt><dd>${manifest.encrypted ? "Encrypted" : "Plain local files"}</dd></div></dl><button class="text-button" id="view-issues">${manifest.issues.length ? "View exception details" : "No exception report needed"}</button></aside></div>`;
+    <aside class="verification-panel" aria-labelledby="verification-title"><p class="eyebrow">Verification</p><h2 id="verification-title">${requiresVerification ? "Enter the passphrase to check every file" : manifest.issues.length ? `${manifest.issues.length} items need attention` : "Every decoded file is accounted for"}</h2><div class="resolution-ring ${requiresVerification ? "pending-ring" : ""}" style="--score:${requiresVerification ? 0 : percent}"><strong>${score}</strong><span>${requiresVerification ? "encrypted files" : "resolved"}</span></div>${requiresVerification ? `<p class="verification-help">Encrypted files cannot be marked resolved until a full authenticated checksum scan finishes.</p><button class="button primary" id="verify-encrypted">Verify encrypted archive</button><p id="verification-status" class="form-status" aria-live="polite"></p>` : ""}<dl><div><dt>Source bytes</dt><dd>${formatBytes(manifest.total_bytes)}</dd></div><div><dt>Stored once</dt><dd>${formatBytes(manifest.unique_bytes)}</dd></div><div><dt>Space avoided</dt><dd>${formatBytes(Math.max(0, manifest.total_bytes - manifest.unique_bytes))}</dd></div><div><dt>Storage</dt><dd>${manifest.encrypted ? "Encrypted" : "Plain local files"}</dd></div></dl><button class="text-button" id="view-issues">${manifest.issues.length ? "View exception details" : "No exception report needed"}</button></aside></div>`;
   bindArchive(manifest);
   renderAttachmentRows(manifest.attachments, manifest);
   recordRecent(currentManifestPath);
@@ -257,7 +347,20 @@ function bindArchive(manifest: ArchiveManifest): void {
   filter.addEventListener("change", update);
   document.querySelector("#export-report")?.addEventListener("click", async () => {
     const destination = await save({ defaultPath: "attachment-verification.csv", filters: [{ name: "CSV report", extensions: ["csv"] }] });
-    if (destination) await invoke("export_report", { manifestPath: currentManifestPath, destinationPath: destination, format: "csv" });
+    if (destination) await invoke("export_report", { manifestPath: currentManifestPath, destinationPath: destination, format: "csv", passphrase: currentArchivePassphrase });
+  });
+  document.querySelector("#verify-encrypted")?.addEventListener("click", async () => {
+    const passphrase = window.prompt("Enter this archive’s passphrase to verify every stored file:");
+    if (!passphrase) return;
+    const status = document.querySelector<HTMLElement>("#verification-status")!;
+    status.textContent = "Checking every unique encrypted file…";
+    try {
+      const checked = await invoke<ArchiveManifest>("verify_encrypted_archive", { manifestPath: currentManifestPath, passphrase });
+      currentArchivePassphrase = passphrase;
+      renderArchive(checked);
+    } catch (error) {
+      status.textContent = `The scan did not run. ${String(error)}`;
+    }
   });
   document.querySelector("#view-issues")?.addEventListener("click", () => showIssues(manifest));
   document.querySelector("#compact-ledger")?.addEventListener("click", event => {
