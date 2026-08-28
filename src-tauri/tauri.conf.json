@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Mail Attachment Archive",
+  "version": "0.1.0",
+  "identifier": "in.sociobot.mail-attachment-archive",
+  "build": {
+    "beforeDevCommand": "npm run dev:app",
+    "devUrl": "http://localhost:1420/?app=1",
+    "beforeBuildCommand": "npm run build:app",
+    "frontendDist": "../dist/app"
+  },
+  "app": {
+    "windows": [{
+      "title": "Mail Attachment Archive",
+      "width": 1280,
+      "height": 800,
+      "minWidth": 760,
+      "minHeight": 580,
+      "backgroundColor": "#0b0f14"
+    }],
+    "security": { "csp": "default-src 'self'; img-src 'self' asset:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.sociobot.in" }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Utility",
+    "shortDescription": "Verify and archive mail attachments locally",
+    "longDescription": "Imports MBOX exports, deduplicates attachments by SHA-256, and reports every unresolved item.",
+    "copyright": "Copyright 2026 Param Factory",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "linux": { "appimage": { "bundleMediaFramework": false }, "deb": { "depends": [] } }
+  }
+}
