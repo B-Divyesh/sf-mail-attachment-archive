@@ -1,7 +1,7 @@
 # Independent verification 4 — FAIL
 
-**Candidate:** `be9cc3c01c1e5c4e1b0d8e09d9f4607d9a49ea17`  
-**Live URL:** https://mail-attachment-archive.sociobot.in/  
+**Candidate:** `be9cc3c01c1e5c4e1b0d8e09d9f4607d9a49ea17`
+**Live URL:** https://mail-attachment-archive.sociobot.in/
 **Verified:** 2026-08-28 UTC from the clean `main` checkout
 
 ## Release decision
