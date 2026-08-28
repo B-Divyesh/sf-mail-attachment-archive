@@ -58,11 +58,11 @@ Results on 2026-08-28:
 - Static deploy command: `npm ci && npm run build:site`
 - Static deploy root: `dist/site`
 - Release v0.1.0: https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/tag/v0.1.0
-- GitHub Actions run `33153908548`: four build jobs and manifest job passed.
+- GitHub Actions final run `33154594528`: four build jobs and manifest job passed.
 - Published assets: Apple Silicon and Intel `.dmg`, Windows `.exe` and `.msi`,
   Linux `.AppImage`, `.deb`, and `.rpm`, plus `SHA256SUMS` and `latest.json`.
-- Downloaded the published `.deb` and verified its SHA-256 against the published
-  checksum: `4a756feb4c8921809c5e5ff76d08d4d36d94d42e56e8c485a31a0c5eafef7cdd`.
+- Downloaded the published Windows `.exe` and verified its SHA-256 against the
+  final published checksum: `004babee226fa59469033c0b00dddedbda372b259df6ef7d1834a004af51a8c9`.
 - The site reads the release `latest.json`, detects macOS/Windows/Linux, and
   exposes a separate Intel Mac link. Install scripts verify SHA-256 before use.
 
