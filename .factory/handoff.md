@@ -81,9 +81,43 @@ npm run tauri build -- --bundles deb
 
 ## Release and deployment
 
-The final commit, GitHub Actions run, v0.1.1 asset/checksum evidence, Azure
-Static Web Apps deployment identifier, live response headers, live 404, and
-deployment identity are recorded here after publishing.
+- Repair commit: `50242050dfefd9a07436507f6c43969089a65564`.
+  Release-manifest commit: `f4255c2`. Host-policy follow-up: `1d5fdc7`.
+- Release: [v0.1.1](https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/tag/v0.1.1),
+  GitHub Actions run
+  [33165144493](https://github.com/B-Divyesh/sf-mail-attachment-archive/actions/runs/33165144493),
+  success. macOS ARM, macOS Intel, Windows, and Linux matrix jobs all passed.
+- The release has nine native artifacts plus `SHA256SUMS` and `latest.json`.
+  An independent download of `Mail.Attachment.Archive_0.1.1_amd64.deb`
+  matched its published SHA-256:
+  `037f8f7744b4f3fd6ab297fdbd50b168a2239f85aefb665ef5125d6b15248130`.
+- Azure Static Web Apps deployment:
+  `200de0c5-228c-4088-adde-91a44d88e589`, status `Succeeded`, custom domain
+  `https://mail-attachment-archive.sociobot.in`, HTTPS 200.
+- The first Azure validation exposed that `/demo` and `/demo/` normalize to
+  one route. Commit `1d5fdc7` removed the duplicate, added a normalized-route
+  uniqueness regression, rebuilt, and deployed successfully.
+- `/opt/fleet/lib/verify-url.sh` against the live custom domain: load 857 ms,
+  correct title and `lang`, one `h1`, one `main`, zero missing image alt text,
+  zero unlabeled buttons, and zero console errors.
+- Live desktop and 390×844 demo browser checks: banner present, one `h1`, skip
+  link focuses `main`, no horizontal overflow, no console/page errors, no
+  off-origin requests, and zero serious/critical Axe violations.
+- Live response policy: CSP, Referrer-Policy, nosniff, frame denial, and
+  Permissions-Policy are present. The hashed JS has
+  `Cache-Control: public, max-age=31536000, immutable`.
+- Live routes: `/demo`, `/demo/`, `/privacy/`, and `/terms/` return 200. An
+  unknown route returns HTTP 404 with the designed 404 document.
+- Deployment identity matched exactly for HTML
+  (`014f633374a4235c2679e47df098c14236f374b268609f6dd1d527a52e57c59b`),
+  JS (`8f47e1ccef69c1d729c82aa0f44d5ef9c3ac3a686b642390050235f72acb813c`),
+  and `latest.json`
+  (`bcc1af62021010d1b4033e28c2aef9ce851d98ed014256e9af6566a749c4cde7`).
+- The live Linux button resolves to the real v0.1.1 AppImage. A live invalid
+  license check returns `{valid:false, reason:"invalid"}` with CORS restricted
+  to the product origin. No updater plugin/manifest or telemetry dependency is
+  shipped; the free archive workflow remains local and does not wait on a
+  network request.
 
 ## Known gaps / operator action
 
