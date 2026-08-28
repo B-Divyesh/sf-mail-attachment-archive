@@ -11,6 +11,7 @@ export interface ReleaseAsset {
 
 export interface ReleaseManifest {
   version: string;
+  source_commit: string;
   published_at: string;
   platforms: Record<ReleasePlatform, ReleaseAsset>;
 }
@@ -33,6 +34,7 @@ export function parseReleaseManifest(value: unknown): ReleaseManifest | null {
   if (!value || typeof value !== "object") return null;
   const manifest = value as Partial<ReleaseManifest>;
   if (typeof manifest.version !== "string" || !manifest.version) return null;
+  if (typeof manifest.source_commit !== "string" || !/^[a-f0-9]{40}$/i.test(manifest.source_commit)) return null;
   if (typeof manifest.published_at !== "string" || Number.isNaN(Date.parse(manifest.published_at))) return null;
   if (!manifest.platforms || !releasePlatforms.every(platform => isAsset(manifest.platforms?.[platform]))) return null;
   return manifest as ReleaseManifest;

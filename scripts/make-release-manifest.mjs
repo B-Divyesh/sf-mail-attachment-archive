@@ -2,8 +2,10 @@ import { createHash } from "node:crypto";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 
-const [directory, repository, tag] = process.argv.slice(2);
-if (!directory || !repository || !tag) throw new Error("Usage: node make-release-manifest.mjs <directory> <owner/repo> <tag>");
+const [directory, repository, tag, sourceCommit] = process.argv.slice(2);
+if (!directory || !repository || !tag || !/^[a-f0-9]{40}$/i.test(sourceCommit || "")) {
+  throw new Error("Usage: node make-release-manifest.mjs <directory> <owner/repo> <tag> <40-character-source-commit>");
+}
 const files = (await readdir(directory)).filter(name => !["SHA256SUMS", "latest.json"].includes(name));
 const records = await Promise.all(files.map(async filename => ({
   filename,
@@ -20,6 +22,6 @@ if (!macosArm || !macosIntel || !windows || !linux || !linuxDeb) {
   throw new Error(`Missing required platform assets. Found: ${files.join(", ")}`);
 }
 const compact = record => ({ url: record.url, sha256: record.sha256, filename: record.filename });
-const manifest = { version: tag.replace(/^v/, ""), published_at: new Date().toISOString(), platforms: { macos: compact(macosArm), macos_intel: compact(macosIntel), windows: compact(windows), linux: compact(linux), linux_deb: compact(linuxDeb) } };
+const manifest = { version: tag.replace(/^v/, ""), source_commit: sourceCommit.toLowerCase(), published_at: new Date().toISOString(), platforms: { macos: compact(macosArm), macos_intel: compact(macosIntel), windows: compact(windows), linux: compact(linux), linux_deb: compact(linuxDeb) } };
 await writeFile(join(directory, "latest.json"), JSON.stringify(manifest, null, 2) + "\n");
 await writeFile(join(directory, "SHA256SUMS"), records.sort((a,b) => a.filename.localeCompare(b.filename)).map(record => `${record.sha256}  ${basename(record.filename)}`).join("\n") + "\n");

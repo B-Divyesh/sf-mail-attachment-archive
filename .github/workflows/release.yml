@@ -8,7 +8,11 @@ on:
       tag:
         description: Existing v* tag to publish
         required: true
-        default: v0.1.2
+        default: v0.1.3
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+  RELEASE_REF: ${{ inputs.tag || github.ref }}
 
 permissions:
   contents: write
@@ -18,6 +22,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -26,6 +33,8 @@ jobs:
       - name: Install Linux system dependencies
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
       - run: npm ci
+      - name: Verify tag, source commit, and package versions
+        run: npm run verify:release-identity -- "$RELEASE_TAG" "${{ github.event_name == 'push' && github.sha || '' }}"
       - run: npm test
       - run: npm run check
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
@@ -50,6 +59,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -61,16 +73,18 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
       - run: npm ci
+      - name: Verify tag, source commit, and package versions
+        run: npm run verify:release-identity -- "$RELEASE_TAG" "${{ github.event_name == 'push' && github.sha || '' }}"
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.event.inputs.tag || github.ref_name }}
-          releaseName: Mail Attachment Archive ${{ github.event.inputs.tag || github.ref_name }}
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: Mail Attachment Archive ${{ env.RELEASE_TAG }}
           releaseBody: |
             Local MBOX attachment archiving with SHA-256 deduplication, optional at-rest encryption, restoration verification, and explicit exception reports.
 
-            These first-release binaries are unsigned. Verify downloads against SHA256SUMS.
+            These binaries are unsigned. Verify downloads against SHA256SUMS.
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
@@ -80,12 +94,16 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
+          fetch-depth: 0
+      - name: Verify tag, source commit, and package versions
+        run: npm run verify:release-identity -- "$RELEASE_TAG" "${{ github.event_name == 'push' && github.sha || '' }}"
       - name: Download release assets
         run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir release-assets
       - name: Build checksums and update manifest
-        run: node scripts/make-release-manifest.mjs release-assets "$GITHUB_REPOSITORY" "$RELEASE_TAG"
+        run: node scripts/make-release-manifest.mjs release-assets "$GITHUB_REPOSITORY" "$RELEASE_TAG" "$(git rev-parse HEAD)"
       - name: Publish verification files
         run: gh release upload "$RELEASE_TAG" release-assets/SHA256SUMS release-assets/latest.json --repo "$GITHUB_REPOSITORY" --clobber

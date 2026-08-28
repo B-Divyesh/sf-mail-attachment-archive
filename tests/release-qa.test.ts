@@ -1,7 +1,63 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("release QA contracts", () => {
+  it("keeps every desktop package version aligned", () => {
+    const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+    const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
+    const tauri = JSON.parse(readFileSync("src-tauri/tauri.conf.json", "utf8"));
+    const cargo = readFileSync("src-tauri/Cargo.toml", "utf8");
+    const cargoVersion = cargo.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+    const app = readFileSync("src/main.ts", "utf8");
+    const appVersion = app.match(/^const appVersion = "([^"]+)";/m)?.[1];
+    expect(new Set([packageJson.version, packageLock.packages[""].version, tauri.version, cargoVersion, appVersion]).size).toBe(1);
+    for (const page of ["public/404.html", "public/privacy/index.html", "public/terms/index.html"]) {
+      expect(readFileSync(page, "utf8")).toContain(`v${packageJson.version}`);
+    }
+  });
+
+  it("binds every release job and manifest to the tagged source commit", () => {
+    const workflow = readFileSync(".github/workflows/release.yml", "utf8");
+    const identityCheck = readFileSync("scripts/verify-release-identity.mjs", "utf8");
+    const manifestBuilder = readFileSync("scripts/make-release-manifest.mjs", "utf8");
+    expect(workflow.match(/ref: \$\{\{ env\.RELEASE_REF \}\}/g)).toHaveLength(3);
+    expect(workflow.match(/verify:release-identity/g)).toHaveLength(3);
+    expect(workflow).toContain('"$(git rev-parse HEAD)"');
+    expect(identityCheck).toContain('git("rev-list", "-n", "1", tag)');
+    expect(identityCheck).toContain("head !== tagCommit");
+    expect(manifestBuilder).toContain("source_commit: sourceCommit.toLowerCase()");
+  });
+
+  it("refuses to publish a tag from a different checked-out source commit", () => {
+    const directory = mkdtempSync(join(tmpdir(), "maa-release-identity-"));
+    const verifyScript = resolve("scripts/verify-release-identity.mjs");
+    const git = (...args: string[]) => execFileSync("git", args, { cwd: directory, encoding: "utf8" });
+    try {
+      mkdirSync(join(directory, "src-tauri"), { recursive: true });
+      mkdirSync(join(directory, "src"), { recursive: true });
+      writeFileSync(join(directory, "package.json"), JSON.stringify({ version: "0.1.3" }));
+      writeFileSync(join(directory, "package-lock.json"), JSON.stringify({ packages: { "": { version: "0.1.3" } } }));
+      writeFileSync(join(directory, "src-tauri", "tauri.conf.json"), JSON.stringify({ version: "0.1.3" }));
+      writeFileSync(join(directory, "src-tauri", "Cargo.toml"), '[package]\nversion = "0.1.3"\n');
+      writeFileSync(join(directory, "src", "main.ts"), 'const appVersion = "0.1.3";\n', { flag: "w" });
+      git("init");
+      git("config", "user.email", "qa@example.test");
+      git("config", "user.name", "QA");
+      git("add", ".");
+      git("commit", "-m", "release source");
+      git("tag", "v0.1.3");
+      expect(execFileSync("node", [verifyScript, "v0.1.3"], { cwd: directory, encoding: "utf8" })).toContain("release identity verified");
+      git("commit", "--allow-empty", "-m", "different source");
+      expect(() => execFileSync("node", [verifyScript, "v0.1.3"], { cwd: directory, encoding: "utf8", stdio: "pipe" }))
+        .toThrow(/does not match v0\.1\.3/);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("ships CSP, immutable hashed assets, and an HTTP 404 override", () => {
     const config = JSON.parse(readFileSync("public/staticwebapp.config.json", "utf8"));
     expect(config.globalHeaders["Content-Security-Policy"]).toContain("default-src 'self'");

@@ -238,7 +238,7 @@ test("secondary routes expose route-specific metadata and a complete site skelet
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", title);
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeVisible();
     await expect(page.getByText("Built by Param Factory")).toBeVisible();
-    await expect(page.getByText(/v0\.1\.2/)).toBeVisible();
+    await expect(page.getByText(/v0\.1\.3/)).toBeVisible();
   }
 });
 

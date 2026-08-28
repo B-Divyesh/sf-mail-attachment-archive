@@ -1,5 +1,6 @@
 {
   "version": "0.1.2",
+  "source_commit": "8c2bc38ba45ca57386381be00fd886b5d312e298",
   "published_at": "2026-08-28T12:57:57.703Z",
   "platforms": {
     "macos": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.2/Mail.Attachment.Archive_0.1.2_aarch64.dmg", "sha256": "20632cbc57b55326bf1f91e9f4fa96dd6de78c15d723f464aa909907d5ddfbfa", "filename": "Mail.Attachment.Archive_0.1.2_aarch64.dmg" },

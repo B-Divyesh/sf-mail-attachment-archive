@@ -14,7 +14,7 @@ const appMode = __APP_BUILD__ || new URLSearchParams(location.search).get("app")
 const demoMode = location.pathname.replace(/\/+$/, "").endsWith("/demo") || new URLSearchParams(location.search).get("demo") === "1";
 const icon = `<svg class="mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M5 11h12l5 6 5-6h12v22H5z"/><circle cx="12" cy="26" r="2"/><circle cx="22" cy="26" r="2"/><circle cx="32" cy="26" r="2"/><path d="M12 26h20"/></svg>`;
 const siteOrigin = "https://mail-attachment-archive.sociobot.in";
-const appVersion = "0.1.2";
+const appVersion = "0.1.3";
 
 if (!demoMode) captureLicense();
 
@@ -261,7 +261,7 @@ function renderApp(): void {
       <section id="app-state" aria-live="polite"></section>
     </main>
     <dialog id="import-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">New local archive</p><h2>Choose how to store it</h2><p id="source-file"></p><label class="check-row"><input type="checkbox" id="encrypt-archive" /><span><b>Encrypt attachment files</b><small>Recommended on shared computers. Your passphrase is never stored.</small></span></label><div id="passphrase-wrap" hidden><label for="passphrase">Archive passphrase</label><input id="passphrase" type="password" minlength="10" autocomplete="new-password" /><small>At least 10 characters. Losing this passphrase means losing access.</small></div><p class="form-status" aria-live="polite"></p><button class="button primary" id="choose-location" type="button">Choose archive location</button></form></dialog>
-    <dialog id="about-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">Version 0.1.2</p><h2>Private by construction</h2><p>No telemetry, accounts, or remote processing. Archive Plus licenses are checked at most once per day; the free archive never waits on that check.</p><p id="license-status"></p><label for="app-license-token">Restore Archive Plus on this computer</label><input id="app-license-token" autocomplete="off" /><p class="form-status" id="app-license-status" aria-live="polite"></p><button class="button primary" id="verify-app-license" type="button">Verify and restore license</button><a class="button secondary" href="${checkoutUrlForReturn("https://mail-attachment-archive.sociobot.in/")}" target="_blank" rel="noopener">Buy Archive Plus · $29</a><p class="fine">After checkout, paste the license token from your receipt here. It stays in this app only.</p></form></dialog>`;
+    <dialog id="about-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><p class="eyebrow">Version ${appVersion}</p><h2>Private by construction</h2><p>No telemetry, accounts, or remote processing. Archive Plus licenses are checked at most once per day; the free archive never waits on that check.</p><p id="license-status"></p><label for="app-license-token">Restore Archive Plus on this computer</label><input id="app-license-token" autocomplete="off" /><p class="form-status" id="app-license-status" aria-live="polite"></p><button class="button primary" id="verify-app-license" type="button">Verify and restore license</button><a class="button secondary" href="${checkoutUrlForReturn("https://mail-attachment-archive.sociobot.in/")}" target="_blank" rel="noopener">Buy Archive Plus · $29</a><p class="fine">After checkout, paste the license token from your receipt here. It stays in this app only.</p></form></dialog>`;
 
   renderEmpty();
   bindAppActions();
