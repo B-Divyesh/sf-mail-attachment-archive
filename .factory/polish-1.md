@@ -44,6 +44,11 @@ phone, walkthrough, and native-outcome regression coverage.
 
 ## Deployment re-check
 
-After the repair commit is pushed, verify cold at
-`https://mail-attachment-archive.sociobot.in/?demo=1`, `/privacy/`, `/terms/`,
-and an unknown route. Record the deployed build identity in the handoff.
+Deployed with `/opt/fleet/lib/deploy-static.sh mail-attachment-archive dist/site`.
+A cold live request served `assets/index-BO9MRb6X.js`, which contains the
+repaired demo, phone, walkthrough, and focus code. Cold checks returned 200 for
+`/?demo=1`, `/demo/`, `/privacy/`, and `/terms/`; an unknown path returned the
+designed 404. `verify-url.sh` passed with no console errors; its desktop and
+mobile screenshots are `.factory/qa-artifacts/polish-1/screenshot-desktop.png`
+and `.factory/qa-artifacts/polish-1/screenshot-mobile.png`. Live mobile Axe
+found zero serious or critical violations.

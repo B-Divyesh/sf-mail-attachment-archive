@@ -40,9 +40,14 @@ raw / 5.00 KB gzip. No external fonts or scripts were added.
 
 ## Deployment
 
-The static deployment is triggered by the factory from the pushed `main`
-commit. After push, cold-check `/?demo=1`, `/privacy/`, `/terms/`, and a 404
-before publishing the release handoff.
+Committed and pushed repair `c67e36f43fb48dec0c8bbefbd0e73b3cc4057a90` to
+`main`, then deployed `dist/site` with the supplied static deployment work-order
+script. A cold live check served `assets/index-BO9MRb6X.js`; it returned 200 for
+`/?demo=1`, `/demo/`, `/privacy/`, and `/terms/`, and returned the designed 404
+for an unknown path. `verify-url.sh` passed in 734 ms with no console errors.
+Live mobile Axe found zero serious or critical violations. Evidence:
+`.factory/qa-artifacts/polish-1/verify.json`, `screenshot-desktop.png`, and
+`screenshot-mobile.png`.
 
 ## Known gaps
 
