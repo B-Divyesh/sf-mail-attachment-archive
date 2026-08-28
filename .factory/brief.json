@@ -1,0 +1,10 @@
+{
+  "slug": "mail-attachment-archive",
+  "title": "Mail Attachment Archive",
+  "user": "People leaving or backing up an email account who need a local, deduplicated archive of messages and attachments with evidence that nothing was silently omitted.",
+  "smallest_useful_product": "Local desktop app that imports MBOX exports, hashes and deduplicates attachments, creates a browsable offline index, and produces a missing/corrupt-item report.",
+  "success_measure": "At least 95% of imported attachment references resolve locally, with every failure called out in an export report.",
+  "artifact_class": "desktop-app",
+  "monetization": "one-time",
+  "constraints": "Local-first; attachments remain inert; no telemetry; archive encryption offered for export."
+}
