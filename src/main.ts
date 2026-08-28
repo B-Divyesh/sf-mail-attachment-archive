@@ -13,6 +13,8 @@ const root = document.querySelector<HTMLDivElement>("#app")!;
 const appMode = __APP_BUILD__ || new URLSearchParams(location.search).get("app") === "1";
 const demoMode = location.pathname.replace(/\/+$/, "").endsWith("/demo") || new URLSearchParams(location.search).get("demo") === "1";
 const icon = `<svg class="mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M5 11h12l5 6 5-6h12v22H5z"/><circle cx="12" cy="26" r="2"/><circle cx="22" cy="26" r="2"/><circle cx="32" cy="26" r="2"/><path d="M12 26h20"/></svg>`;
+const siteOrigin = "https://mail-attachment-archive.sociobot.in";
+const appVersion = "0.1.2";
 
 if (!demoMode) captureLicense();
 
@@ -22,16 +24,60 @@ else if (demoMode) renderDemo();
 else if (appMode) renderApp();
 else renderSite();
 
+function setRouteMetadata(title: string, description: string, path: string): void {
+  document.title = title;
+  const canonical = `${siteOrigin}${path}`;
+  const set = (selector: string, value: string): void => {
+    document.querySelector<HTMLMetaElement>(selector)?.setAttribute("content", value);
+  };
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute("href", canonical);
+  set('meta[name="description"]', description);
+  set('meta[property="og:title"]', title);
+  set('meta[property="og:description"]', description);
+  set('meta[name="twitter:title"]', title);
+  set('meta[name="twitter:description"]', description);
+}
+
+function siteFooter(): string {
+  return `<footer><div class="brand">${icon}<span>Mail Attachment Archive</span></div><p>Local attachment archives with visible exceptions.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-mail-attachment-archive">Source</a></nav><small>Mail Attachment Archive · v${appVersion} · Built by Param Factory · Original generated hero imagery; provenance in the repository.</small></footer>`;
+}
+
+function bindDialogFocus(dialog: HTMLDialogElement, trigger: HTMLElement): void {
+  const focusable = (): HTMLElement[] => Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+    .filter(element => !element.hidden && element.getClientRects().length > 0);
+  dialog.addEventListener("keydown", event => {
+    if (event.key !== "Tab") return;
+    const elements = focusable();
+    if (!elements.length) return;
+    const active = document.activeElement as HTMLElement | null;
+    const index = active ? elements.indexOf(active) : -1;
+    if (event.shiftKey && (index <= 0 || !dialog.contains(active))) {
+      event.preventDefault();
+      elements.at(-1)?.focus();
+    } else if (!event.shiftKey && (index === elements.length - 1 || !dialog.contains(active))) {
+      event.preventDefault();
+      elements[0].focus();
+    }
+  });
+  dialog.addEventListener("close", () => trigger.focus());
+}
+
+function openDialog(dialog: HTMLDialogElement, initialFocus: HTMLElement): void {
+  dialog.showModal();
+  queueMicrotask(() => initialFocus.focus());
+}
+
 function renderLegal(page: "privacy" | "terms"): void {
   const privacy = page === "privacy";
-  document.title = `${privacy ? "Privacy" : "Terms"} — Mail Attachment Archive`;
+  setRouteMetadata(`${privacy ? "Privacy" : "Terms"} — Mail Attachment Archive`, privacy ? "Read how Mail Attachment Archive keeps mail data local and uses license tokens." : "Read the terms for Mail Attachment Archive, a local MBOX attachment archive.", privacy ? "/privacy/" : "/terms/");
   const content = privacy
     ? `<p class="eyebrow">Effective 28 August 2026</p><h1>Privacy, in plain language</h1><p><strong>Your mailbox, messages, attachments, hashes, and reports stay on your computer.</strong> Mail Attachment Archive has no user account, telemetry, advertising, or analytics SDK.</p><h2>Local archive data</h2><p>The desktop app reads files you explicitly choose and writes an archive to a folder you explicitly choose. It does not upload mail data. Optional encryption derives a key from your passphrase on-device; the passphrase is not stored.</p><h2>License verification</h2><p>If you buy or restore Archive Plus, only your license token is sent to Sociobot’s billing API at most once per day. Mail data is never part of this request.</p><h2>Website</h2><p>The landing page sets no tracking cookies and loads no third-party scripts, fonts, pixels, or analytics.</p><h2>Contact</h2><p>Email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p>`
     : `<p class="eyebrow">Effective 28 August 2026</p><h1>Terms of use</h1><p>Mail Attachment Archive is a local utility for creating and verifying attachment archives from mail exports you control.</p><h2>Your responsibility</h2><p>You must have the right to process the mail you import. Keep an independent source copy until you have inspected the report. Attachments remain potentially harmful if restored and opened.</p><h2>No silent promises</h2><p>“Resolved” means decoded bytes were stored locally and matched their SHA-256 checksum, not that the content is safe or semantically complete.</p><h2>Archive Plus</h2><p>Archive Plus costs <strong>US $29 once</strong> and adds recent archive shortcuts and a compact ledger. Core importing, deduplication, encryption, restoration, and reports are free. Sociobot/Dodo is the merchant of record; refunds revoke the license.</p><h2>Warranty</h2><p>The software is provided “as is,” to the extent permitted by law. These terms do not limit rights that cannot legally be limited.</p><h2>Contact</h2><p>Email <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p>`;
-  root.innerHTML = `<header class="legal-header"><a class="brand" href="../">${icon}<span>Mail Attachment Archive</span></a></header><main id="main" tabindex="-1" class="legal-main">${content}</main><footer><a href="../${privacy ? "terms" : "privacy"}/">${privacy ? "Terms" : "Privacy"}</a></footer>`;
+  root.innerHTML = `<header class="legal-header"><a class="brand" href="/">${icon}<span>Mail Attachment Archive</span></a></header><main id="main" tabindex="-1" class="legal-main">${content}</main>${siteFooter()}`;
 }
 
 function renderSite(): void {
+  setRouteMetadata("Mail Attachment Archive — check an MBOX export", "Make a local attachment archive and keep an explicit report of every failure.", "/");
   root.innerHTML = `
     <header class="site-header">
       <a class="brand" href="./" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a>
@@ -87,7 +133,7 @@ function renderSite(): void {
 
       <section class="final-cta"><p class="eyebrow">Leave with evidence</p><h2>Your account can close. Your records should still open.</h2><a class="button primary" href="#download">Get Mail Attachment Archive</a></section>
     </main>
-    <footer><div class="brand">${icon}<span>Mail Attachment Archive</span></div><p>Built for private, verifiable exits.</p><nav aria-label="Legal"><a href="./privacy/">Privacy</a><a href="./terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-mail-attachment-archive">Source</a></nav><small>Original generated hero imagery; provenance in the repository.</small></footer>
+    ${siteFooter()}
     <dialog id="license-dialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Close">×</button><h2>Restore Archive Plus</h2><p>Paste the license token from your receipt. It is stored only in this browser.</p><label for="license-token">License token</label><input id="license-token" autocomplete="off" /><p class="form-status" aria-live="polite"></p><button class="button primary" id="verify-token" type="button">Verify license</button></form></dialog>`;
 
   void configureDownload();
@@ -95,16 +141,16 @@ function renderSite(): void {
 }
 
 function renderDemo(): void {
-  document.title = "Demo — Mail Attachment Archive";
+  setRouteMetadata("Demo — Mail Attachment Archive", "Inspect a realistic local sample archive with four attachment references and its verification report.", "/demo/");
   localStorage.setItem(demoStorageKey, JSON.stringify({ startedAt: new Date().toISOString() }));
   root.innerHTML = `
     <div class="demo-banner" role="status"><strong>Demo — sample data, nothing is saved</strong><span id="demo-notice" aria-live="polite"></span><div><button class="text-button" id="reset-demo">Reset demo</button><a class="button secondary" id="leave-demo" href="/#download">Start for real</a></div></div>
-    <header class="app-header"><a class="brand" href="/" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a><span class="offline-badge">● Sample archive</span></header>
+    <header class="app-header"><a class="brand" id="demo-home" href="/" aria-label="Mail Attachment Archive home">${icon}<span>Mail Attachment Archive</span></a><span class="offline-badge">● Sample archive</span></header>
     <main id="main" tabindex="-1" class="workspace demo-workspace">
       <section class="workspace-title"><div><p class="eyebrow">Leaving-account sample</p><h1>Inspect a checked attachment archive</h1><p id="archive-subtitle">leaving-work-account.mbox · four attachment references</p></div></section>
       <section id="demo-state"></section>
     </main>
-    <footer><p>Demo data is embedded in this page and uses only the <code>demo:</code> storage namespace.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><small>Mail Attachment Archive · v0.1.2</small></footer>`;
+    ${siteFooter()}`;
   renderDemoArchive();
   document.querySelector("#reset-demo")?.addEventListener("click", () => {
     localStorage.removeItem(demoStorageKey);
@@ -113,6 +159,8 @@ function renderDemo(): void {
     document.querySelector<HTMLElement>("#demo-notice")!.textContent = "Sample restored.";
   });
   document.querySelector("#leave-demo")?.addEventListener("click", () => localStorage.removeItem(demoStorageKey));
+  document.querySelector("#demo-home")?.addEventListener("click", () => localStorage.removeItem(demoStorageKey));
+  window.addEventListener("pagehide", () => localStorage.removeItem(demoStorageKey), { once: true });
 }
 
 function renderDemoArchive(): void {
@@ -192,7 +240,9 @@ async function configureDownload(): Promise<void> {
 
 function bindLicenseDialog(): void {
   const dialog = document.querySelector<HTMLDialogElement>("#license-dialog")!;
-  document.querySelector("#restore-license")?.addEventListener("click", () => dialog.showModal());
+  const trigger = document.querySelector<HTMLElement>("#restore-license")!;
+  bindDialogFocus(dialog, trigger);
+  document.querySelector("#restore-license")?.addEventListener("click", () => openDialog(dialog, document.querySelector<HTMLElement>("#license-token")!));
   document.querySelector("#verify-token")?.addEventListener("click", async () => {
     const input = document.querySelector<HTMLInputElement>("#license-token")!;
     const status = document.querySelector<HTMLElement>(".form-status")!;
@@ -215,6 +265,8 @@ function renderApp(): void {
 
   renderEmpty();
   bindAppActions();
+  bindDialogFocus(document.querySelector<HTMLDialogElement>("#import-dialog")!, document.querySelector<HTMLElement>("#import-mbox")!);
+  bindDialogFocus(document.querySelector<HTMLDialogElement>("#about-dialog")!, document.querySelector<HTMLElement>("#about-button")!);
   void verifyLicense();
 }
 
@@ -248,7 +300,7 @@ function bindAppActions(): void {
   document.querySelector("#about-button")?.addEventListener("click", () => {
     const state = storedLicense();
     document.querySelector<HTMLElement>("#license-status")!.textContent = state.valid ? "Archive Plus is active." : "The complete archive engine is free. Plus adds workspace conveniences.";
-    document.querySelector<HTMLDialogElement>("#about-dialog")!.showModal();
+    openDialog(document.querySelector<HTMLDialogElement>("#about-dialog")!, document.querySelector<HTMLElement>("#app-license-token")!);
   });
   document.querySelector("#verify-app-license")?.addEventListener("click", async () => {
     const input = document.querySelector<HTMLInputElement>("#app-license-token")!;
@@ -276,7 +328,7 @@ async function startImport(): Promise<void> {
     const checkbox = document.querySelector<HTMLInputElement>("#encrypt-archive")!;
     const passWrap = document.querySelector<HTMLElement>("#passphrase-wrap")!;
     checkbox.onchange = () => { passWrap.hidden = !checkbox.checked; };
-    dialog.showModal();
+    openDialog(dialog, checkbox);
     document.querySelector("#choose-location")!.addEventListener("click", runImport, { once: true });
   } catch (error) { renderError("Could not open the file picker", error); }
 }

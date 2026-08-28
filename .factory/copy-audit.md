@@ -31,8 +31,9 @@ word. No sentence exceeds 22 words. No banned marketing term appears.
 | Refunds revoke the license. | 4 | — |
 | Your account can close. | 4 | — |
 | Your records should still open. | 5 | — |
-| Built for private, verifiable exits. | 5 | — |
-| Original generated hero imagery; provenance is in the repository. | 9 | — |
+| Local attachment archives with visible exceptions. | 6 | — |
+| Built by Param Factory. | 4 | — |
+| Original generated hero imagery; provenance in the repository. | 8 | — |
 
 ## Action and status fragments
 

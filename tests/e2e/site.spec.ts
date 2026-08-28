@@ -31,6 +31,12 @@ test("@claim:demo-sandbox one click opens an isolated, resettable sample", async
   await page.getByRole("link", { name: "Start for real" }).click();
   await expect(page).toHaveURL(/\/#download$/);
   expect(await page.evaluate(() => localStorage.getItem("demo:mail-attachment-archive:state"))).toBeNull();
+
+  await page.goto("/demo/");
+  await expect(page.locator("#demo-home")).toBeVisible();
+  await page.locator("#demo-home").click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => localStorage.getItem("demo:mail-attachment-archive:state"))).toBeNull();
 });
 
 test("@claim:local-only demo flow sends no data off origin", async ({ page }) => {
@@ -93,8 +99,8 @@ test("@claim:archive-search searches metadata and filters status", async ({ page
   await expect(page.getByText("IMG_2048-copy.jpg")).toBeVisible();
 });
 
-test("demo and legal routes have no serious accessibility violations", async ({ page }) => {
-  for (const route of ["/demo/", "/privacy/", "/terms/"]) {
+test("demo, legal, and 404 routes have no serious accessibility violations", async ({ page }) => {
+  for (const route of ["/demo/", "/privacy/", "/terms/", "/404.html"]) {
     await page.goto(route);
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("main")).toHaveCount(1);
@@ -173,16 +179,66 @@ test("390px layout does not overflow", async ({ page }, testInfo) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("mobile navigation and legal links meet the 44px touch-target baseline", async ({ page }, testInfo) => {
+test("mobile every interactive target meets the 44px touch-target baseline", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "mobile project only");
-  for (const route of ["/demo/", "/privacy/", "/terms/"]) {
+  for (const route of ["/", "/demo/", "/privacy/", "/terms/", "/404.html"]) {
     await page.goto(route);
-    const links = page.locator("header a, footer a");
-    for (let index = 0; index < await links.count(); index += 1) {
-      const box = await links.nth(index).boundingBox();
+    const targets = page.locator("a, button, input, select, summary");
+    for (let index = 0; index < await targets.count(); index += 1) {
+      const target = targets.nth(index);
+      if (!await target.isVisible()) continue;
+      const box = await target.boundingBox();
       expect(box, `${route} target ${index}`).not.toBeNull();
-      expect(box!.height, `${route} target ${index}`).toBeGreaterThanOrEqual(44);
+      expect(box!.width, `${route} target ${index} width`).toBeGreaterThanOrEqual(44);
+      expect(box!.height, `${route} target ${index} height`).toBeGreaterThanOrEqual(44);
     }
+  }
+});
+
+async function expectFocusToWrapInDialog(page: import("@playwright/test").Page, dialog: import("@playwright/test").Locator): Promise<void> {
+  const targets = dialog.locator("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])");
+  await expect(targets).not.toHaveCount(0);
+  await targets.last().focus();
+  await page.keyboard.press("Tab");
+  await expect(targets.first()).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(targets.last()).toBeFocused();
+  expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe("BODY");
+}
+
+test("license dialogs wrap focus in both directions and restore their triggers", async ({ page }) => {
+  await page.goto("/");
+  const restore = page.getByRole("button", { name: "Have a license? Restore it" });
+  await restore.click();
+  const siteDialog = page.locator("#license-dialog");
+  await expectFocusToWrapInDialog(page, siteDialog);
+  await page.keyboard.press("Escape");
+  await expect(restore).toBeFocused();
+
+  await page.goto("/?app=1");
+  const about = page.getByRole("button", { name: "About and license" });
+  await about.click();
+  const appDialog = page.locator("#about-dialog");
+  await expectFocusToWrapInDialog(page, appDialog);
+  await page.keyboard.press("Escape");
+  await expect(about).toBeFocused();
+});
+
+test("secondary routes expose route-specific metadata and a complete site skeleton", async ({ page }) => {
+  const cases = [
+    ["/demo/", "Demo — Mail Attachment Archive", "https://mail-attachment-archive.sociobot.in/demo/"],
+    ["/privacy/", "Privacy — Mail Attachment Archive", "https://mail-attachment-archive.sociobot.in/privacy/"],
+    ["/terms/", "Terms — Mail Attachment Archive", "https://mail-attachment-archive.sociobot.in/terms/"],
+    ["/404.html", "Page not found — Mail Attachment Archive", "https://mail-attachment-archive.sociobot.in/404.html"]
+  ] as const;
+  for (const [route, title, canonical] of cases) {
+    await page.goto(route);
+    await expect(page).toHaveTitle(title);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", canonical);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", title);
+    await expect(page.getByRole("link", { name: "Skip to main content" })).toBeVisible();
+    await expect(page.getByText("Built by Param Factory")).toBeVisible();
+    await expect(page.getByText(/v0\.1\.2/)).toBeVisible();
   }
 });
 

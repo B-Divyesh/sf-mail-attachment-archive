@@ -21,6 +21,10 @@
 html { scroll-behavior: smooth; background: var(--ink); }
 body { margin: 0; min-width: 320px; min-height: 100vh; background-color: var(--ink); background-image: radial-gradient(circle at 1px 1px, rgba(93,123,151,.18) 1px, transparent 0); background-size: 24px 24px; font-size: 17px; line-height: 1.55; }
 button, input, select { font: inherit; }
+/* Every control has a 44px hit area, including inline legal and pricing links. */
+a, button, input, select, summary { min-width: 44px; min-height: 44px; }
+a { display: inline-flex; align-items: center; }
+input[type="checkbox"] { width: 44px; height: 44px; flex: 0 0 44px; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
 img { max-width: 100%; height: auto; display: block; }
@@ -37,7 +41,7 @@ p { color: var(--muted); }
 .brand { min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 750; text-decoration: none; letter-spacing: -.02em; }
 .mark { width: 38px; height: 38px; fill: none; stroke: var(--amber); stroke-width: 2; }
 nav { display: flex; gap: 28px; align-items: center; }
-nav a, footer a { min-height: 44px; display: inline-flex; align-items: center; color: var(--muted); text-decoration: none; font-size: 15px; }
+nav a, footer a { color: var(--muted); text-decoration: none; font-size: 15px; }
 nav a:hover { color: var(--paper); }
 .hero { width: min(1240px, calc(100% - 48px)); margin: auto; min-height: 750px; display: grid; grid-template-columns: minmax(360px, .85fr) minmax(560px, 1.3fr); align-items: center; gap: 38px; padding: 72px 0; }
 .hero-copy { position: relative; z-index: 2; }
@@ -92,7 +96,7 @@ nav a:hover { color: var(--paper); }
 .final-cta { text-align: center; padding: 96px 24px; border: 1px solid var(--grid); background: radial-gradient(circle at 50% 120%, rgba(245,184,66,.16), transparent 45%), var(--surface); }.final-cta h2 { max-width: 18ch; margin: 0 auto 32px; }
 footer { width: min(1240px, calc(100% - 48px)); margin: auto; padding: 40px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }footer p { margin: 0; font-size: 14px; }footer small { color: #82909e; grid-column: 1/-1; }
 .legal-header { min-height: 76px; display: flex; align-items: center; width: min(760px, calc(100% - 32px)); margin: auto; border-bottom: 1px solid var(--line); }.legal-main { width: min(760px, calc(100% - 32px)); margin: auto; padding: 64px 0 80px; }.legal-main h1 { max-width: 15ch; }.legal-main h2 { font-size: 26px; margin-top: 44px; }.legal-main strong { color: var(--paper); }
-dialog { color: var(--paper); background: var(--surface); border: 1px solid var(--line); border-radius: 2px 2px 16px 2px; width: min(520px, calc(100% - 32px)); padding: 32px; box-shadow: 0 24px 80px #000; }dialog::backdrop { background: rgba(2,5,8,.82); backdrop-filter: blur(4px); }dialog h2 { font-size: 28px; }dialog label:not(.check-row) { display: block; font-weight: 700; margin: 20px 0 8px; }dialog input:not([type=checkbox]) { width: 100%; min-height: 48px; color: var(--paper); background: var(--ink); border: 1px solid var(--line); padding: 10px 12px; }dialog .primary { margin-top: 16px; }.dialog-close { position: absolute; right: 16px; top: 12px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); font-size: 28px; cursor: pointer; }.form-status { color: var(--coral); min-height: 1.5em; font-size: 14px; }.check-row { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border: 1px solid var(--line); cursor: pointer; }.check-row input { width: 22px; height: 22px; accent-color: var(--amber); }.check-row small { display: block; color: var(--muted); }
+dialog { color: var(--paper); background: var(--surface); border: 1px solid var(--line); border-radius: 2px 2px 16px 2px; width: min(520px, calc(100% - 32px)); padding: 32px; box-shadow: 0 24px 80px #000; }dialog::backdrop { background: rgba(2,5,8,.82); backdrop-filter: blur(4px); }dialog h2 { font-size: 28px; }dialog label:not(.check-row) { display: block; font-weight: 700; margin: 20px 0 8px; }dialog input:not([type=checkbox]) { width: 100%; min-height: 48px; color: var(--paper); background: var(--ink); border: 1px solid var(--line); padding: 10px 12px; }dialog .primary { margin-top: 16px; }.dialog-close { position: absolute; right: 16px; top: 12px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); font-size: 28px; cursor: pointer; }.form-status { color: var(--coral); min-height: 1.5em; font-size: 14px; }.check-row { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border: 1px solid var(--line); cursor: pointer; }.check-row input { width: 44px; height: 44px; flex: 0 0 44px; accent-color: var(--amber); }.check-row small { display: block; color: var(--muted); }
 
 /* Desktop application */
 .app-header { width: 100%; margin: 0; padding: 0 24px; background: rgba(11,15,20,.95); }.app-actions { display: flex; align-items: center; gap: 12px; }.offline-badge { font: 12px ui-monospace, monospace; color: var(--mint); border: 1px solid var(--line); padding: 7px 10px; }.icon-button { width: 44px; height: 44px; border: 1px solid var(--line); color: var(--paper); background: var(--surface); cursor: pointer; }

@@ -400,7 +400,10 @@ fn restore_attachment(
         .find(|a| a.id == attachment_id)
         .ok_or("That attachment is not in this archive.")?;
     if record.status == "decode_failed" {
-        return Err("This attachment could not be decoded during import, so there is no file to restore.".into());
+        return Err(
+            "This attachment could not be decoded during import, so there is no file to restore."
+                .into(),
+        );
     }
     let root = path.parent().ok_or("The manifest has no archive folder.")?;
     let stored_path = safe_join(root, &record.stored_path)?;
@@ -723,35 +726,97 @@ mod tests {
     #[test]
     // @claim:mbox-import
     fn claim_mbox_import_keeps_a_decode_failed_reference_in_the_real_manifest() {
-        let unique = format!("maa-import-test-{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default());
+        let unique = format!(
+            "maa-import-test-{}",
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        );
         let root = std::env::temp_dir().join(unique);
         let source = root.join("mixed-success.mbox");
         let destination = root.join("archive");
         fs::create_dir_all(&root).unwrap();
         fs::write(&source, "From owner@example.test Sat Jan 01 00:00:00 2026\nMessage-ID: <mixed@example.test>\r\nSubject: Account export\r\nFrom: owner@example.test\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=b\r\n\r\n--b\r\nContent-Type: application/pdf; name=good.pdf\r\nContent-Disposition: attachment; filename=good.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\naGVsbG8=\r\n--b\r\nContent-Type: application/pdf; name=broken.pdf\r\nContent-Disposition: attachment; filename=broken.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\nnot valid base64!\r\n--b--\r\n").unwrap();
-        let manifest = import_mbox(source.to_string_lossy().to_string(), destination.to_string_lossy().to_string(), false, None).unwrap();
+        let manifest = import_mbox(
+            source.to_string_lossy().to_string(),
+            destination.to_string_lossy().to_string(),
+            false,
+            None,
+        )
+        .unwrap();
         assert_eq!(manifest.messages.len(), 1);
-        assert_eq!(manifest.attachments.len(), 2, "every MIME reference stays in the manifest");
-        assert_eq!(manifest.attachments.iter().filter(|a| a.status == "verified").count(), 1);
-        assert_eq!(manifest.attachments.iter().filter(|a| a.status == "decode_failed").count(), 1);
-        assert_eq!(manifest.issues.iter().filter(|i| i.kind == "decode_failed").count(), 1);
-        let reopened = load_manifest(destination.join("manifest.json").to_string_lossy().to_string()).unwrap();
+        assert_eq!(
+            manifest.attachments.len(),
+            2,
+            "every MIME reference stays in the manifest"
+        );
+        assert_eq!(
+            manifest
+                .attachments
+                .iter()
+                .filter(|a| a.status == "verified")
+                .count(),
+            1
+        );
+        assert_eq!(
+            manifest
+                .attachments
+                .iter()
+                .filter(|a| a.status == "decode_failed")
+                .count(),
+            1
+        );
+        assert_eq!(
+            manifest
+                .issues
+                .iter()
+                .filter(|i| i.kind == "decode_failed")
+                .count(),
+            1
+        );
+        let reopened = load_manifest(
+            destination
+                .join("manifest.json")
+                .to_string_lossy()
+                .to_string(),
+        )
+        .unwrap();
         assert_eq!(reopened.attachments.len(), 2);
-        assert_eq!(reopened.attachments.iter().filter(|a| a.status == "verified").count(), 1);
-        assert_eq!(reopened.attachments.iter().filter(|a| a.status == "decode_failed").count(), 1);
+        assert_eq!(
+            reopened
+                .attachments
+                .iter()
+                .filter(|a| a.status == "verified")
+                .count(),
+            1
+        );
+        assert_eq!(
+            reopened
+                .attachments
+                .iter()
+                .filter(|a| a.status == "decode_failed")
+                .count(),
+            1
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
     // @claim:safe-mbox-limit
     fn rejects_mbox_files_above_the_safe_import_boundary_before_reading() {
-        let unique = format!("maa-size-test-{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default());
+        let unique = format!(
+            "maa-size-test-{}",
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        );
         let root = std::env::temp_dir().join(unique);
         let source = root.join("too-large.mbox");
         fs::create_dir_all(&root).unwrap();
         let file = fs::File::create(&source).unwrap();
         file.set_len(MAX_MBOX_BYTES + 1).unwrap();
-        let result = import_mbox(source.to_string_lossy().to_string(), root.join("archive").to_string_lossy().to_string(), false, None);
+        let result = import_mbox(
+            source.to_string_lossy().to_string(),
+            root.join("archive").to_string_lossy().to_string(),
+            false,
+            None,
+        );
         assert!(result.unwrap_err().contains("safely imports files up to"));
         fs::remove_dir_all(root).unwrap();
     }
