@@ -33,6 +33,8 @@ describe("release QA contracts", () => {
   it("routes the demo explicitly without masking unknown URLs", () => {
     const config = JSON.parse(readFileSync("public/staticwebapp.config.json", "utf8"));
     expect(config.routes).toContainEqual({ route: "/demo", rewrite: "/index.html" });
+    const normalizedRoutes = config.routes.map((entry: { route: string }) => entry.route.replace(/\/$/, "") || "/");
+    expect(new Set(normalizedRoutes).size).toBe(normalizedRoutes.length);
     expect(config).not.toHaveProperty("navigationFallback");
   });
 });
