@@ -1,48 +1,74 @@
-# Mail Attachment Archive v0.1.1 — repair handoff
+# Mail Attachment Archive — independent verification 2 handoff
 
 ## Outcome
 
-Repaired every release blocker and severity finding from independent verifier
-report `58a687c7f86be297094bfac9e1ed7167dc8b6678` against candidate
-`becaae419ab9c6ecef36abcb44fdb00c05a2f4d5`. The product remains a Tauri 2
-desktop app with a static Vite landing site.
+**FAIL** for candidate `d1ac0f5d9602c0fe3ad6313a2d6b3bba72c3e4b5` at
+https://mail-attachment-archive.sociobot.in, verified 2026-08-28 from a clean
+checkout. No product code was modified. Full evidence is in
+`.factory/verification-2.md`.
 
-## Finding-by-finding repair
+The first-read/demo gate passes, the deployed site matches the candidate, the
+local build/test/accessibility/performance/release checks are green, and a
+published Linux package/install was checksum-verified. The candidate still
+fails the acceptance contract for product and claims defects.
 
-- **Missing claims contract:** added `.factory/claims.json` with 14 claims.
-  Each claim has one tagged regression command and a clean sandbox description.
-- **No one-click demo:** added the first-screen **Try it with sample data**
-  action, `/demo/`, an embedded leaving-account archive, persistent banner,
-  reset/exit controls, desktop **Load sample project**, the exclusive
-  `demo:mail-attachment-archive:state` namespace, a shipped MBOX fixture, and
-  `.factory/demo.md`.
-- **Encrypted reopen falsely looked verified:** encrypted files reopen as
-  `unverified`; the UI withholds the resolved score and requires a passphrase
-  for a full scan. New archives contain an independently encrypted passphrase
-  probe. A wrong passphrase changes no file status. A valid scan authenticates,
-  decrypts, hashes, propagates each result to duplicate references, and writes
-  `verification-report.json`. Missing or damaged ciphertext is explicit.
-- **No CSP / short asset caching:** added Azure Static Web Apps response policy
-  with a restrictive CSP, frame denial, permissions policy, and one-year
-  immutable caching for Vite's hashed `assets/index-*` output.
-- **No real 404:** removed catch-all navigation fallback, routed only `/demo`
-  to the SPA, and added a styled `404.html` plus an HTTP 404 response override.
-- **Audience unclear:** the first sentence now names people leaving or backing
-  up an email account and the change the app makes for them.
+## Release blockers
 
-Related release-hardening work includes complete metadata, social card and
-touch icon, semantic legal pages with skip links, claim-safe landing copy and
-`.factory/copy-audit.md`, full demo accessibility coverage, v0.1.1 versioning,
-and propagation of plain-file corruption to duplicate references.
+1. A real MIME decode failure is recorded only as an issue, not as an
+   attachment reference. The UI divides verified attachments by the shortened
+   attachment array, so an archive with one good and one failed reference can
+   display **100.0% resolved**. The canned demo's correct 3-of-4 behavior does
+   not represent the real importer.
+2. Core claim checks are not end to end through the demo/shipped UI. The demo
+   is a canned manifest; import, encryption, reopen scan, restore, and reports
+   are tested through private Rust functions. The MBOX test does not call the
+   importer, and presence-only tests do not prove the controls complete work.
+3. Archive Plus cannot be activated in the installed desktop app. Checkout
+   returns to website storage, while the app's About dialog has no license
+   paste/restore field or deep-link handoff.
+4. CSV and JSON export are advertised, but the installed UI exposes and
+   hard-codes CSV only. The JSON claim passes only because its test bypasses
+   the UI and calls the native command directly.
 
-## Verification evidence (2026-08-28)
+## Additional findings
 
-Commands run from `/work/repo`:
+- Mobile legal/footer/home touch targets are 20–38 px high instead of 44 px.
+- The importer buffers the entire MBOX in memory and has no safe size limit.
+- Native report-save and stale-recent-archive failures lack a caught, visible
+  recovery state.
+- Installer and Ubuntu-version statements are not listed in `claims.json`.
+
+## Verification summary
+
+- `npm ci`: pass, 0 vulnerabilities.
+- Claims: all 14 commands pass after installing documented Tauri prerequisites.
+  The first raw Rust invocations failed to compile before those system
+  dependencies were installed; browser/Vitest claims passed immediately.
+- `npm test`: 9/9; `npm run check`: pass; Rust tests: 8/8; strict Clippy: pass.
+- `npm run build`: pass; site JS 35.7 KB raw / 11.2 KB gzip, CSS 18.2 KB raw /
+  4.9 KB gzip.
+- `npm run test:e2e`: 29 pass, 1 intentional mobile duplicate skip.
+- `npm run tauri build -- --bundles deb`: pass; local native binary launched
+  under Xvfb.
+- Live Axe: zero serious/critical at desktop and 390 px; console/page errors:
+  zero; reduced-motion running animations: zero.
+- Lighthouse mobile: 100 Performance / 100 Accessibility / 100 Best Practices /
+  100 SEO; LCP 1.18 s, TBT 69 ms, CLS 0.
+- Live HTML, JS, release manifest and 404 hashes exactly match the candidate
+  build. Security headers and immutable hashed-asset caching are present.
+- Billing burst: 30×200 then 50×429 from 80 concurrent requests; every 429 had
+  `Retry-After: 4`.
+- Release `v0.1.1` has all platform assets. Downloaded DEB and one-line-installed
+  AppImage matched published SHA-256 values.
+
+## How to reproduce
 
 ```sh
+sudo apt-get update
+sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 npm ci
-npm run check
 npm test
+npm run check
 cargo test --manifest-path src-tauri/Cargo.toml
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 npm run build
@@ -50,82 +76,9 @@ npm run test:e2e
 npm run tauri build -- --bundles deb
 ```
 
-- Clean install: 66 packages, 0 reported vulnerabilities.
-- TypeScript: pass.
-- Vitest: 9/9 pass across archive helpers, claims/policy, release metadata, and
-  license response policy.
-- Rust: 8/8 pass. The encrypted-integrity regression imports an encrypted
-  archive, proves reopen is unverified, validates the correct passphrase,
-  rejects a wrong one without false corruption, flips a ciphertext byte, and
-  confirms both `corrupt` status and report output.
-- Clippy with warnings denied: pass.
-- Playwright 1.58.2: 29 pass, 1 intentional project skip. Chromium desktop and
-  390×844 cover demo isolation/reset/exit, privacy requests, CSV contents,
-  search/filter, same-origin release metadata, fallback, license pricing,
-  empty/sample app states, responsive overflow, keyboard skip navigation, and
-  reduced motion.
-- Axe via Playwright: zero serious/critical violations on landing, `/demo/`,
-  `/privacy/`, `/terms/`, and the desktop shell in both browser projects.
-- Every command in `.factory/claims.json` was also run verbatim and passed.
-- Production output: site JS 35.71 KB (11.26 KB gzip), CSS 18.15 KB (4.85 KB
-  gzip), mobile hero 30.07 KB, social card 58.29 KB. `dist/site/` contains the
-  CSP/cache/404 host configuration.
-- Lighthouse 12.8.2 mobile against the production build: Performance 100,
-  Accessibility 100, Best Practices 100, SEO 100; FCP 1.0 s, LCP 1.4 s, CLS 0,
-  total blocking time 40 ms.
-- Visual review: 1440×900 landing and 390×844 demo passed. The banner, first
-  task, controls, exception, and ledger remain legible without overflow.
-- Linux consumer package: `Mail Attachment Archive_0.1.1_amd64.deb`, 2,865,908
-  bytes; Debian metadata reports version 0.1.1/amd64 and contains the desktop
-  entry, icon set, and `/usr/bin/mail-attachment-archive`.
+## Next steps
 
-## Release and deployment
-
-- Repair commit: `50242050dfefd9a07436507f6c43969089a65564`.
-  Release-manifest commit: `f4255c2`. Host-policy follow-up: `1d5fdc7`.
-- Release: [v0.1.1](https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/tag/v0.1.1),
-  GitHub Actions run
-  [33165144493](https://github.com/B-Divyesh/sf-mail-attachment-archive/actions/runs/33165144493),
-  success. macOS ARM, macOS Intel, Windows, and Linux matrix jobs all passed.
-- The release has nine native artifacts plus `SHA256SUMS` and `latest.json`.
-  An independent download of `Mail.Attachment.Archive_0.1.1_amd64.deb`
-  matched its published SHA-256:
-  `037f8f7744b4f3fd6ab297fdbd50b168a2239f85aefb665ef5125d6b15248130`.
-- Azure Static Web Apps deployment:
-  `200de0c5-228c-4088-adde-91a44d88e589`, status `Succeeded`, custom domain
-  `https://mail-attachment-archive.sociobot.in`, HTTPS 200.
-- The first Azure validation exposed that `/demo` and `/demo/` normalize to
-  one route. Commit `1d5fdc7` removed the duplicate, added a normalized-route
-  uniqueness regression, rebuilt, and deployed successfully.
-- `/opt/fleet/lib/verify-url.sh` against the live custom domain: load 857 ms,
-  correct title and `lang`, one `h1`, one `main`, zero missing image alt text,
-  zero unlabeled buttons, and zero console errors.
-- Live desktop and 390×844 demo browser checks: banner present, one `h1`, skip
-  link focuses `main`, no horizontal overflow, no console/page errors, no
-  off-origin requests, and zero serious/critical Axe violations.
-- Live response policy: CSP, Referrer-Policy, nosniff, frame denial, and
-  Permissions-Policy are present. The hashed JS has
-  `Cache-Control: public, max-age=31536000, immutable`.
-- Live routes: `/demo`, `/demo/`, `/privacy/`, and `/terms/` return 200. An
-  unknown route returns HTTP 404 with the designed 404 document.
-- Deployment identity matched exactly for HTML
-  (`014f633374a4235c2679e47df098c14236f374b268609f6dd1d527a52e57c59b`),
-  JS (`8f47e1ccef69c1d729c82aa0f44d5ef9c3ac3a686b642390050235f72acb813c`),
-  and `latest.json`
-  (`bcc1af62021010d1b4033e28c2aef9ce851d98ed014256e9af6566a749c4cde7`).
-- The live Linux button resolves to the real v0.1.1 AppImage. A live invalid
-  license check returns `{valid:false, reason:"invalid"}` with CORS restricted
-  to the product origin. No updater plugin/manifest or telemetry dependency is
-  shipped; the free archive workflow remains local and does not wait on a
-  network request.
-
-## Known gaps / operator action
-
-- Direct IMAP login remains intentionally out of scope; users export MBOX first.
-- Encrypted archives created by v0.1.0 lack the new independent passphrase
-  probe. They reopen as unverified and receive an explicit instruction to
-  re-import before relying on a full scan; they are never shown as resolved.
-- Desktop binaries remain unsigned. Signing requires `APPLE_CERTIFICATE` and
-  notarization credentials plus `WINDOWS_CERT_PFX` and its password.
-- The Sociobot billing product must remain registered for
-  `mail-attachment-archive`; no direct payment provider is embedded.
+Correct the real reference denominator, add an installed-app license restore
+path, expose or retract JSON export, and replace claim tests that bypass the
+shipped workflow. Then repeat independent verification against a newly tagged
+desktop release and matching live deployment.
