@@ -11,7 +11,7 @@ command -v python3 >/dev/null 2>&1 || { echo "python3 is required to read the si
 curl -fsSL "$manifest_url" -o "$tmp_dir/latest.json"
 
 case "$(uname -s)" in
-  Darwin) platform="macos" ;;
+  Darwin) if [ "$(uname -m)" = "x86_64" ]; then platform="macos_intel"; else platform="macos"; fi ;;
   Linux) platform="linux" ;;
   *) echo "This installer supports macOS and Linux. On Windows, use install.ps1." >&2; exit 1 ;;
 esac

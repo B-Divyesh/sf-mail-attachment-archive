@@ -103,6 +103,13 @@ async function configureDownload(): Promise<void> {
     if (!response.ok) return;
     const manifest = await response.json() as { platforms?: Record<string, { url: string }> };
     if (manifest.platforms?.[platform]?.url) button.href = manifest.platforms[platform].url;
+    if (platform === "macos" && manifest.platforms?.macos_intel?.url) {
+      note.textContent = "Apple Silicon · ";
+      const intel = document.createElement("a");
+      intel.href = manifest.platforms.macos_intel.url;
+      intel.textContent = "Intel Mac download";
+      note.append(intel);
+    }
   } catch { /* release link remains a valid fallback */ }
 }
 
