@@ -88,3 +88,21 @@ Observed before final commit/deploy:
   `APPLE_CERTIFICATE` and notarization credentials; Windows signing needs
   `WINDOWS_CERT_PFX` and its password.
 - No telemetry, updater, or mail-data network path was introduced.
+
+## Release evidence
+
+- Repair commit: `ce5fc0a` (`fix: repair archive verification and desktop
+  exports`), pushed to `origin/main`.
+- Local package: `Mail Attachment Archive_0.1.1_amd64.deb`, 2,867,164 bytes.
+  `dpkg-deb -I` reports `Version: 0.1.1`, `Architecture: amd64`, and the
+  expected WebKit/GTK dependencies.
+- Static deployment: Azure Static Web Apps CLI 2.0.10 deployed `dist/site` to
+  production at `https://black-moss-012bcc910.7.azurestaticapps.net` (custom
+  domain `https://mail-attachment-archive.sociobot.in`).
+- Live verification: custom-domain HTTP 200; browser load 2,093 ms; no console
+  errors; title/lang, exactly one H1, main landmark, image alt text, and button
+  labels all passed. Local/live `index.html` SHA-256 matched exactly:
+  `1a45456a8842798379f5b782c9a57b3f15d94d9167966c035de36053bb418bb1`.
+  Unknown routes return HTTP 404. Live CSP, HSTS, `nosniff`, frame denial,
+  Referrer-Policy, Permissions-Policy, and immutable hashed-asset caching are
+  present.
