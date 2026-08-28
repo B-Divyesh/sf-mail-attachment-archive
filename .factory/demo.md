@@ -7,7 +7,8 @@ sample project** before a real archive is opened.
 The sample represents someone leaving a work account. It contains three
 messages and four attachment references: a closing statement, a photo stored
 once for two message references, and a damaged contract reference retained in
-the exception report. The source fixture is
+the exception report. Use the visible **Export CSV** or **Export JSON** control
+to download the complete sample evidence. The source fixture is
 `public/samples/leaving-account.mbox`; the complete sample manifest is embedded
 from `src/demo.ts` so the demo needs no server or account.
 

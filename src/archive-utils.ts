@@ -5,6 +5,14 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 ** index).toFixed(index ? 1 : 0)} ${units[index]}`;
 }
 
+export function resolutionScore(attachments: Array<{ status: string }>): { resolved: number; percent: string } {
+  const resolved = attachments.filter(attachment => attachment.status === "verified").length;
+  return {
+    resolved,
+    percent: attachments.length ? (resolved / attachments.length * 100).toFixed(1) : "100.0"
+  };
+}
+
 export function filename(path: string): string {
   return path.split(/[\\/]/).pop() || path;
 }

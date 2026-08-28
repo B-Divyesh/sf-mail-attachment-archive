@@ -24,9 +24,11 @@ describe("release QA contracts", () => {
         readFileSync("tests/e2e/site.spec.ts", "utf8"),
         readFileSync("tests/license.test.ts", "utf8"),
         readFileSync("tests/release-manifest.test.ts", "utf8"),
+        readFileSync("tests/release-qa.test.ts", "utf8"),
         readFileSync("src-tauri/src/lib.rs", "utf8")
       ].join("\n");
-      expect(sources).toContain(`@claim:${claim.id}`);
+      const tags = sources.match(new RegExp(`@claim:${claim.id}(?![A-Za-z0-9_-])`, "g")) || [];
+      expect(tags, `claim ${claim.id} must have exactly one regression tag`).toHaveLength(1);
     }
   });
 
@@ -36,5 +38,22 @@ describe("release QA contracts", () => {
     const normalizedRoutes = config.routes.map((entry: { route: string }) => entry.route.replace(/\/$/, "") || "/");
     expect(new Set(normalizedRoutes).size).toBe(normalizedRoutes.length);
     expect(config).not.toHaveProperty("navigationFallback");
+  });
+
+  it("@claim:verified-installers fails closed unless a downloaded asset matches its SHA-256", () => {
+    const shell = readFileSync("public/install.sh", "utf8");
+    const powershell = readFileSync("public/install.ps1", "utf8");
+    for (const installer of [shell, powershell]) {
+      expect(installer).toContain("latest.json");
+      expect(installer).toMatch(/sha256(sum)?|Get-FileHash/i);
+      expect(installer).toMatch(/Checksum verification failed/i);
+    }
+  });
+
+  it("@claim:ubuntu-support builds the Linux artifact on Ubuntu 22.04 and labels that requirement", () => {
+    const workflow = readFileSync(".github/workflows/release.yml", "utf8");
+    const app = readFileSync("src/main.ts", "utf8");
+    expect(workflow).toContain("ubuntu-22.04");
+    expect(app).toContain("Ubuntu 22.04+");
   });
 });

@@ -14,6 +14,9 @@ use std::{
 };
 
 const ARCHIVE_VERSION: u8 = 1;
+// Importing an MBOX requires a complete parse today. Keep that allocation bounded
+// rather than letting a multi-gigabyte Takeout export exhaust the desktop app.
+const MAX_MBOX_BYTES: u64 = 256 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttachmentRecord {
@@ -83,6 +86,16 @@ fn import_mbox(
     }
     if encrypted && passphrase.as_deref().unwrap_or("").chars().count() < 10 {
         return Err("Encrypted archives require a passphrase of at least 10 characters.".into());
+    }
+    let source_size = fs::metadata(&source)
+        .map_err(io_error("inspect the MBOX file"))?
+        .len();
+    if source_size > MAX_MBOX_BYTES {
+        return Err(format!(
+            "This MBOX is {} MB. This version safely imports files up to {} MB; split the export into smaller MBOX files and import each one.",
+            source_size / (1024 * 1024),
+            MAX_MBOX_BYTES / (1024 * 1024)
+        ));
     }
     fs::create_dir_all(destination.join("files")).map_err(io_error("create the archive folder"))?;
     let raw = fs::read(&source).map_err(io_error("read the MBOX file"))?;
@@ -156,12 +169,32 @@ fn import_mbox(
         let mut parts = Vec::new();
         collect_attachments(&parsed, &mut parts);
         for (part_index, part) in parts.into_iter().enumerate() {
+            let id = hex::encode(Sha256::digest(
+                format!("{}:{}:{}", message_id, part.filename, part_index).as_bytes(),
+            ))[..20]
+                .to_owned();
             let bytes = match part.bytes {
                 Ok(bytes) => bytes,
                 Err(detail) => {
+                    let filename = safe_filename(&part.filename);
+                    // A failed MIME part is still an attachment reference. Keeping
+                    // it in the manifest makes the resolved denominator honest and
+                    // ensures CSV/JSON reports retain a row as well as the issue.
+                    message.attachment_ids.push(id.clone());
+                    manifest.attachments.push(AttachmentRecord {
+                        id,
+                        message_id: message_id.clone(),
+                        filename: filename.clone(),
+                        content_type: part.content_type,
+                        size: 0,
+                        sha256: String::new(),
+                        stored_path: String::new(),
+                        duplicate_of: None,
+                        status: "decode_failed".into(),
+                    });
                     manifest.issues.push(IssueRecord {
                         message_id: Some(message_id.clone()),
-                        filename: Some(part.filename),
+                        filename: Some(filename),
                         kind: "decode_failed".into(),
                         detail,
                     });
@@ -169,10 +202,6 @@ fn import_mbox(
                 }
             };
             let hash = hex::encode(Sha256::digest(&bytes));
-            let id = hex::encode(Sha256::digest(
-                format!("{}:{}:{}", message_id, part.filename, part_index).as_bytes(),
-            ))[..20]
-                .to_owned();
             let duplicate_of = seen.get(&hash).cloned();
             let relative = format!("files/{}.{}", hash, if encrypted { "maa" } else { "bin" });
             manifest.total_bytes += bytes.len() as u64;
@@ -218,6 +247,9 @@ fn load_manifest(manifest_path: String) -> Result<ArchiveManifest, String> {
     manifest.verification_complete = !manifest.encrypted;
     let mut results: HashMap<String, String> = HashMap::new();
     for attachment in &mut manifest.attachments {
+        if attachment.status == "decode_failed" {
+            continue;
+        }
         let stored = safe_join(root, &attachment.stored_path)?;
         let status = if !stored.is_file() {
             "missing".to_string()
@@ -276,7 +308,9 @@ fn clear_scan_results(manifest: &mut ArchiveManifest) {
         )
     });
     for attachment in &mut manifest.attachments {
-        attachment.status = "verified".into();
+        if attachment.status != "decode_failed" {
+            attachment.status = "verified".into();
+        }
     }
 }
 
@@ -304,6 +338,9 @@ fn verify_encrypted_archive(
     let root = path.parent().ok_or("The manifest has no archive folder.")?;
     let mut results: HashMap<String, String> = HashMap::new();
     for attachment in &mut manifest.attachments {
+        if attachment.status == "decode_failed" {
+            continue;
+        }
         let status = if let Some(status) = results.get(&attachment.sha256) {
             status.clone()
         } else {
@@ -362,6 +399,9 @@ fn restore_attachment(
         .iter()
         .find(|a| a.id == attachment_id)
         .ok_or("That attachment is not in this archive.")?;
+    if record.status == "decode_failed" {
+        return Err("This attachment could not be decoded during import, so there is no file to restore.".into());
+    }
     let root = path.parent().ok_or("The manifest has no archive folder.")?;
     let stored_path = safe_join(root, &record.stored_path)?;
     let stored = fs::read(stored_path).map_err(io_error("read the stored attachment"))?;
@@ -682,18 +722,41 @@ mod tests {
 
     #[test]
     // @claim:mbox-import
-    fn claim_mbox_import_reads_a_standard_export() {
-        let mail = b"Message-ID: <one@example.test>\r\nSubject: Account export\r\nFrom: owner@example.test\r\nContent-Type: text/plain\r\n\r\nhello";
-        let parsed = parse_mail(mail).unwrap();
-        assert_eq!(
-            parsed.headers.get_first_value("Subject").unwrap(),
-            "Account export"
-        );
-        assert_eq!(split_mbox(mail).len(), 1);
+    fn claim_mbox_import_keeps_a_decode_failed_reference_in_the_real_manifest() {
+        let unique = format!("maa-import-test-{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default());
+        let root = std::env::temp_dir().join(unique);
+        let source = root.join("mixed-success.mbox");
+        let destination = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(&source, "From owner@example.test Sat Jan 01 00:00:00 2026\nMessage-ID: <mixed@example.test>\r\nSubject: Account export\r\nFrom: owner@example.test\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=b\r\n\r\n--b\r\nContent-Type: application/pdf; name=good.pdf\r\nContent-Disposition: attachment; filename=good.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\naGVsbG8=\r\n--b\r\nContent-Type: application/pdf; name=broken.pdf\r\nContent-Disposition: attachment; filename=broken.pdf\r\nContent-Transfer-Encoding: base64\r\n\r\nnot valid base64!\r\n--b--\r\n").unwrap();
+        let manifest = import_mbox(source.to_string_lossy().to_string(), destination.to_string_lossy().to_string(), false, None).unwrap();
+        assert_eq!(manifest.messages.len(), 1);
+        assert_eq!(manifest.attachments.len(), 2, "every MIME reference stays in the manifest");
+        assert_eq!(manifest.attachments.iter().filter(|a| a.status == "verified").count(), 1);
+        assert_eq!(manifest.attachments.iter().filter(|a| a.status == "decode_failed").count(), 1);
+        assert_eq!(manifest.issues.iter().filter(|i| i.kind == "decode_failed").count(), 1);
+        let reopened = load_manifest(destination.join("manifest.json").to_string_lossy().to_string()).unwrap();
+        assert_eq!(reopened.attachments.len(), 2);
+        assert_eq!(reopened.attachments.iter().filter(|a| a.status == "verified").count(), 1);
+        assert_eq!(reopened.attachments.iter().filter(|a| a.status == "decode_failed").count(), 1);
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
-    // @claim:evidence-reports
+    // @claim:safe-mbox-limit
+    fn rejects_mbox_files_above_the_safe_import_boundary_before_reading() {
+        let unique = format!("maa-size-test-{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default());
+        let root = std::env::temp_dir().join(unique);
+        let source = root.join("too-large.mbox");
+        fs::create_dir_all(&root).unwrap();
+        let file = fs::File::create(&source).unwrap();
+        file.set_len(MAX_MBOX_BYTES + 1).unwrap();
+        let result = import_mbox(source.to_string_lossy().to_string(), root.join("archive").to_string_lossy().to_string(), false, None);
+        assert!(result.unwrap_err().contains("safely imports files up to"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn claim_evidence_reports_export_csv_and_json() {
         let unique = format!(
             "maa-report-test-{}-{}",

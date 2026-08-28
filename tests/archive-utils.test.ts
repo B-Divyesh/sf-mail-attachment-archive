@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeHtml, fileExt, filename, formatBytes } from "../src/archive-utils";
+import { escapeHtml, fileExt, filename, formatBytes, resolutionScore } from "../src/archive-utils";
 
 describe("archive presentation helpers", () => {
   it("formats byte counts for evidence summaries", () => {
@@ -15,5 +15,9 @@ describe("archive presentation helpers", () => {
   it("escapes imported metadata before rendering", () => {
     expect(escapeHtml(`<script data-x="1">`)).toBe("&lt;script data-x=&quot;1&quot;&gt;");
     expect(fileExt("invoice.final.pdf")).toBe("PDF");
+  });
+
+  it("uses every attachment reference, including a decode failure, in the visible resolution score", () => {
+    expect(resolutionScore([{ status: "verified" }, { status: "decode_failed" }])).toEqual({ resolved: 1, percent: "50.0" });
   });
 });

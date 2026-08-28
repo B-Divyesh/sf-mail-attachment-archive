@@ -26,7 +26,9 @@ storage key. The desktop first-run screen includes **Load sample project**.
 - Re-verifies plain files when an archive is reopened. Encrypted archives show
   no resolved score until a passphrase-gated full scan finishes.
 - Searches by filename, sender, subject, or checksum.
-- Exports a complete CSV/JSON-compatible evidence report, including failures.
+- Exports complete CSV and JSON evidence reports, including failures.
+- Safely rejects MBOX files over 256 MB before reading them into memory. Split a
+  larger export into smaller MBOX files and import each one.
 
 This is not an inbox replacement and does not delete mail from a provider.
 Keep the source MBOX until you have reviewed the report and restored samples.

@@ -5,6 +5,10 @@ const key = `sb_license:${slug}`;
 const verdictKey = `${key}:verdict`;
 export const checkoutUrl = `https://api.sociobot.in/api/v1/products/${slug}/checkout`;
 
+export function checkoutUrlForReturn(returnUrl: string): string {
+  return `${checkoutUrl}?return_url=${encodeURIComponent(returnUrl)}`;
+}
+
 export function captureLicense(): void {
   const url = new URL(location.href);
   const token = url.searchParams.get("license");

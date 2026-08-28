@@ -18,7 +18,7 @@ export const demoManifest: ArchiveManifest = {
     { id: "statement", message_id: "final-statement", filename: "closing-statement.pdf", content_type: "application/pdf", size: 1843200, sha256: "9f8d39136e708c53b2f7ba93f142e87599a606412631858c119deb6d154d7a20", stored_path: "files/9f8d3913.bin", duplicate_of: null, status: "verified" },
     { id: "photo", message_id: "summer-photos", filename: "IMG_2048.jpg", content_type: "image/jpeg", size: 3355443, sha256: "c610146aca66e2f1c3c8450f79aaf175bc653350441cca4d68b031214680e931", stored_path: "files/c610146a.bin", duplicate_of: null, status: "verified" },
     { id: "photo-copy", message_id: "summer-photos", filename: "IMG_2048-copy.jpg", content_type: "image/jpeg", size: 3355443, sha256: "c610146aca66e2f1c3c8450f79aaf175bc653350441cca4d68b031214680e931", stored_path: "files/c610146a.bin", duplicate_of: "photo", status: "verified" },
-    { id: "contract", message_id: "signed-contract", filename: "signed-contract.docx", content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 0, sha256: "", stored_path: "", duplicate_of: null, status: "corrupt" }
+    { id: "contract", message_id: "signed-contract", filename: "signed-contract.docx", content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 0, sha256: "", stored_path: "", duplicate_of: null, status: "decode_failed" }
   ],
   issues: [{ message_id: "signed-contract", filename: "signed-contract.docx", kind: "decode_failed", detail: "The source MIME part ended before its encoded attachment was complete." }],
   total_bytes: 8554086,
@@ -36,4 +36,8 @@ export function demoCsv(manifest: ArchiveManifest = demoManifest): string {
     `issue:${issue.kind}`, issue.filename, "", "", "", "", issue.message_id, issue.detail, ""
   ].map(quote).join(","));
   return ["status,filename,content_type,size_bytes,sha256,duplicate_of,message_id,subject,from", ...rows, ...issues].join("\n") + "\n";
+}
+
+export function demoJson(manifest: ArchiveManifest = demoManifest): string {
+  return `${JSON.stringify(manifest, null, 2)}\n`;
 }

@@ -7,7 +7,7 @@ export interface AttachmentRecord {
   sha256: string;
   stored_path: string;
   duplicate_of: string | null;
-  status: "verified" | "missing" | "corrupt" | "unverified";
+  status: "verified" | "missing" | "corrupt" | "unverified" | "decode_failed";
 }
 
 export interface MessageRecord {

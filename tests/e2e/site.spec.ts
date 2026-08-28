@@ -68,6 +68,21 @@ test("@claim:csv-report exports one row per sample reference plus its issue", as
   expect(csv.trim().split("\n")).toHaveLength(6);
 });
 
+test("@claim:evidence-reports exports the demo evidence as JSON through the shipped control", async ({ page }) => {
+  await page.goto("/demo/");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export JSON" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("sample-attachment-verification.json");
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const report = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  expect(report.attachments).toHaveLength(4);
+  expect(report.attachments.filter((attachment: { status: string }) => attachment.status === "decode_failed")).toHaveLength(1);
+  expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "decode_failed" })]));
+});
+
 test("@claim:archive-search searches metadata and filters status", async ({ page }) => {
   await page.goto("/demo/");
   await page.getByLabel("Search this archive").fill("accounts@northstar.example");
@@ -148,6 +163,19 @@ test("390px layout does not overflow", async ({ page }, testInfo) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+test("mobile navigation and legal links meet the 44px touch-target baseline", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "mobile project only");
+  for (const route of ["/demo/", "/privacy/", "/terms/"]) {
+    await page.goto(route);
+    const links = page.locator("header a, footer a");
+    for (let index = 0; index < await links.count(); index += 1) {
+      const box = await links.nth(index).boundingBox();
+      expect(box, `${route} target ${index}`).not.toBeNull();
+      expect(box!.height, `${route} target ${index}`).toBeGreaterThanOrEqual(44);
+    }
+  }
+});
+
 test("desktop shell exposes an actionable empty state", async ({ page }) => {
   await page.goto("/?app=1");
   await expect(page.getByRole("heading", { level: 1, name: "Your attachment ledger" })).toBeVisible();
@@ -157,7 +185,7 @@ test("desktop shell exposes an actionable empty state", async ({ page }) => {
   expect(results.violations.filter(item => ["serious", "critical"].includes(item.impact || ""))).toEqual([]);
 });
 
-test("@claim:free-core exposes import, open, sample, search, and export without a license", async ({ page }) => {
+test("@claim:free-core provides import, open, sample, search, and both report formats without a license", async ({ page }) => {
   await page.goto("/?app=1");
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
   await expect(page.getByRole("button", { name: "Import MBOX" })).toBeVisible();
@@ -165,6 +193,16 @@ test("@claim:free-core exposes import, open, sample, search, and export without 
   await page.getByRole("button", { name: "Load sample project" }).click();
   await expect(page.getByLabel("Search this archive")).toBeVisible();
   await expect(page.getByRole("button", { name: "Export CSV" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Export JSON" })).toBeVisible();
+});
+
+test("desktop app lets a purchaser paste and verify a license", async ({ page }) => {
+  await page.goto("/?app=1");
+  await page.getByRole("button", { name: "About and license" }).click();
+  await expect(page.getByLabel("Restore Archive Plus on this computer")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Verify and restore license" })).toBeVisible();
+  const purchase = page.getByRole("link", { name: "Buy Archive Plus · $29" });
+  await expect(purchase).toHaveAttribute("href", /return_url=https%3A%2F%2Fmail-attachment-archive\.sociobot\.in%2F/);
 });
 
 test("privacy and terms pages are direct routes", async ({ page }) => {

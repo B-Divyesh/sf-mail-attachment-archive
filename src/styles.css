@@ -34,10 +34,10 @@ p { color: var(--muted); }
 .skip-link:focus { transform: translateY(0); }
 :focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
 .site-header, .app-header { min-height: 76px; display: flex; align-items: center; justify-content: space-between; width: min(1240px, calc(100% - 48px)); margin: auto; border-bottom: 1px solid rgba(169,178,188,.24); }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 750; text-decoration: none; letter-spacing: -.02em; }
+.brand { min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 750; text-decoration: none; letter-spacing: -.02em; }
 .mark { width: 38px; height: 38px; fill: none; stroke: var(--amber); stroke-width: 2; }
 nav { display: flex; gap: 28px; align-items: center; }
-nav a { color: var(--muted); text-decoration: none; font-size: 15px; }
+nav a, footer a { min-height: 44px; display: inline-flex; align-items: center; color: var(--muted); text-decoration: none; font-size: 15px; }
 nav a:hover { color: var(--paper); }
 .hero { width: min(1240px, calc(100% - 48px)); margin: auto; min-height: 750px; display: grid; grid-template-columns: minmax(360px, .85fr) minmax(560px, 1.3fr); align-items: center; gap: 38px; padding: 72px 0; }
 .hero-copy { position: relative; z-index: 2; }
