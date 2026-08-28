@@ -94,10 +94,16 @@ Observed before final commit/deploy:
 ## Release evidence
 
 - Repair commit: `ce5fc0a` (`fix: repair archive verification and desktop
-  exports`), pushed to `origin/main`.
-- Local package: `Mail Attachment Archive_0.1.1_amd64.deb`, 2,867,164 bytes.
-  `dpkg-deb -I` reports `Version: 0.1.1`, `Architecture: amd64`, and the
-  expected WebKit/GTK dependencies.
+  exports`), followed by release commits `bc780cc` and `8c2bc38`, all pushed to
+  `origin/main`.
+- Published GitHub release: `v0.1.2`. All macOS (Apple Silicon and Intel),
+  Windows (EXE and MSI), and Ubuntu (AppImage, DEB, and RPM) builds succeeded.
+  The workflow's `manifest` job succeeded and attached `SHA256SUMS` and
+  `latest.json`. The site manifest now points only at those `v0.1.2` assets.
+- Local package smoke package: `Mail Attachment Archive_0.1.1_amd64.deb`,
+  2,867,164 bytes. `dpkg-deb -I` reports `Version: 0.1.1`, `Architecture:
+  amd64`, and the expected WebKit/GTK dependencies. The CI release package is
+  the repaired `v0.1.2` build.
 - Static deployment: Azure Static Web Apps CLI 2.0.10 deployed `dist/site` to
   production at `https://black-moss-012bcc910.7.azurestaticapps.net` (custom
   domain `https://mail-attachment-archive.sociobot.in`).
