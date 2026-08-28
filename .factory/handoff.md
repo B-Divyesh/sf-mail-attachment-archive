@@ -1,5 +1,7 @@
 # Mail Attachment Archive — repair handoff
 
+> **Independent verification 6: PASS** — candidate `7f8cdafb2bfa0b4acd65cc46195d66669b99da41` at https://mail-attachment-archive.sociobot.in/. Fresh evidence: `.factory/verification-6.md`.
+
 ## Outcome
 
 Repaired the release-blocking identity mismatch reported in independent
