@@ -1,0 +1,71 @@
+name: Release desktop apps
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing v* tag to publish
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: Mail Attachment Archive ${{ github.event.inputs.tag || github.ref_name }}
+          releaseBody: |
+            Local MBOX attachment archiving with SHA-256 deduplication, optional at-rest encryption, restoration verification, and explicit exception reports.
+
+            These first-release binaries are unsigned. Verify downloads against SHA256SUMS.
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.target }}
+
+  manifest:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download release assets
+        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir release-assets
+      - name: Build checksums and update manifest
+        run: node scripts/make-release-manifest.mjs release-assets "$GITHUB_REPOSITORY" "$RELEASE_TAG"
+      - name: Publish verification files
+        run: gh release upload "$RELEASE_TAG" release-assets/SHA256SUMS release-assets/latest.json --repo "$GITHUB_REPOSITORY" --clobber

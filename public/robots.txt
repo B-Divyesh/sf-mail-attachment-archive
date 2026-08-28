@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mail-attachment-archive.sociobot.in/sitemap.xml

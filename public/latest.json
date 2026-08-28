@@ -1,0 +1,8 @@
+{
+  "version": "0.1.0",
+  "platforms": {
+    "macos": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/latest", "sha256": "published-with-release", "filename": "Mail-Attachment-Archive.dmg" },
+    "windows": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/latest", "sha256": "published-with-release", "filename": "Mail-Attachment-Archive-setup.exe" },
+    "linux": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/latest", "sha256": "published-with-release", "filename": "Mail-Attachment-Archive.AppImage" }
+  }
+}

@@ -66,7 +66,7 @@ change instantly.
 ## Asset plan and provenance
 
 The hero is an original raster illustration generated for this product, then
-cropped and optimized to responsive WebP/AVIF. UI icons and the app mark are
+cropped and optimized to responsive WebP. UI icons and the app mark are
 hand-authored SVGs made of nodes and checksum paths.
 
 ### Prompt sheet
@@ -99,4 +99,3 @@ hand-authored SVGs made of nodes and checksum paths.
   email-provider symbols.”
 - License/provenance: original generated asset commissioned for this product;
   project use permitted. The site footer discloses generated imagery.
-

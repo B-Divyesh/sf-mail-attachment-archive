@@ -48,7 +48,7 @@ function renderSite(): void {
         <figure class="hero-art">
           <picture>
             <source media="(max-width: 700px)" srcset="./assets/archive-geometry-768.webp" type="image/webp" />
-            <img src="./assets/archive-geometry.webp" width="1280" height="853" fetchpriority="high" decoding="async" alt="Paper fragments passing through a verification lattice and resolving into six amber archive files" />
+            <img src="./assets/archive-geometry.webp" width="1200" height="800" fetchpriority="high" decoding="async" alt="Paper fragments passing through a verification lattice and resolving into six amber archive files" />
           </picture>
           <figcaption>Many references. One verified copy of each file.</figcaption>
         </figure>
