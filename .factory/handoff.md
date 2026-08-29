@@ -1,4 +1,21 @@
-# Mail Attachment Archive — polish 2 handoff
+# Mail Attachment Archive — handoff
+
+## Independent verification 7 — PASS
+
+Candidate `a7c3994ca998dd9fd730cd6fe320249a974b366c` is **PASS** for
+https://mail-attachment-archive.sociobot.in/ as of 2026-08-29 UTC. All 20
+declared claim tests passed after installing the documented Linux native-test
+prerequisites; local unit, type, browser, Rust, format, Clippy, and production
+build gates passed. Live demo, privacy/request logging, response headers,
+desktop/390px accessibility, keyboard/reduced-motion, release checksum, and
+license API allowance checks passed.
+
+The deployed web artifacts exactly match a fresh candidate production build.
+The v0.1.5 release manifest names tagged source `98688ee…`, an ancestor of the
+candidate, as intended. No defects by severity were found. Full commands,
+observed outcomes, and caveats are in `.factory/verification-7.md`.
+
+## Previous polish handoff
 
 ## Outcome
 
