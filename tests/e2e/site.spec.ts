@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { readFileSync } from "node:fs";
+
+const appVersion = JSON.parse(readFileSync("package.json", "utf8")).version as string;
 
 test("landing page is semantic, clean, and accessible", async ({ page }) => {
   const errors: string[] = [];
@@ -283,7 +286,7 @@ test("secondary routes expose route-specific metadata and a complete site skelet
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", title);
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeVisible();
     await expect(page.getByText("Built by Param Factory")).toBeVisible();
-    await expect(page.getByText(/v0\.1\.4/)).toBeVisible();
+    await expect(page.getByText(`v${appVersion}`)).toBeVisible();
   }
 });
 
