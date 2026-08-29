@@ -61,4 +61,17 @@ test asserts the serialized false state.
 - Lighthouse mobile: `.factory/qa-artifacts/polish-2/lighthouse-mobile.json` —
   performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.2 s,
   CLS 0, TBT 0 ms.
-- Live cold checks are added here after deployment.
+- Live deployment `04eec903-9a36-4d3a-b596-f05f9d9845be` was verified cold at
+  `https://mail-attachment-archive.sociobot.in/`. The site's `latest.json`
+  now names v0.1.5/source `98688eeac97b7dedabacd02311a8f4bc3f74e462` and its
+  published macOS, Windows, AppImage, and DEB checksums.
+- Live evidence: `.factory/qa-artifacts/polish-2-live/verify.json`,
+  `screenshot-desktop.png`, `screenshot-mobile.png`, `demo-mobile.png`, and
+  `live-journey.json`. The cold demo has four rows, only the `demo:` storage
+  key, resets to four rows, and leaves with empty storage. Pixel and iPhone
+  both receive “Open this page on a computer,” not a binary link.
+- Live accessibility: `.factory/qa-artifacts/polish-2-live/axe-live.json`
+  records no serious or critical Axe findings and no application console errors
+  at desktop and 390 px on `/`, `?demo=1`, `/privacy/`, `/terms/`, and the real
+  404 route. The expected HTTP 404 resource notice is excluded only for the
+  intentionally unknown URL itself.

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "pixel",
+    "downloadText": "Open this page on a computer",
+    "note": "Available for macOS, Windows, and Linux.",
+    "href": null
+  },
+  {
+    "name": "iphone",
+    "downloadText": "Open this page on a computer",
+    "note": "Available for macOS, Windows, and Linux.",
+    "href": null
+  },
+  {
+    "demoBanner": "Demo — sample data, nothing is saved\nReset demo\nStart for real",
+    "sampleRows": 4,
+    "storedKeys": [
+      "demo:mail-attachment-archive:state"
+    ],
+    "demoTitle": "Demo — Mail Attachment Archive"
+  },
+  {
+    "resetRows": 4,
+    "resetFeedback": "Sample restored."
+  },
+  {
+    "leavesDemo": true,
+    "storageAfterLeave": []
+  }
+]

@@ -2,9 +2,10 @@
 
 ## Outcome
 
-All cumulative review findings are implemented locally. The repair preserves
-the evidentiary-geometry visual system and desktop-app deployment class. Release
-and live cold verification remain in progress for this work order.
+All cumulative review findings are closed. The repair preserves the
+evidentiary-geometry visual system and desktop-app deployment class. Commit
+`1351d2ad134df0a3744f0d059f6c1e8e90468954` is pushed to `main`; static
+deployment `04eec903-9a36-4d3a-b596-f05f9d9845be` is live.
 
 ## Material repairs
 
@@ -17,7 +18,8 @@ and live cold verification remain in progress for this work order.
 - Every review-2 reliance statement is removed, narrowed, or listed and tested.
 - First-screen facts, section headings, demo error, README, footer, and pricing
   copy use direct wording and consistent terminology.
-- Version 0.1.5 is prepared for the cross-platform release workflow.
+- The site manifest now points at the completed v0.1.5 cross-platform release,
+  whose source is `98688eeac97b7dedabacd02311a8f4bc3f74e462`.
 
 ## Local evidence
 
@@ -25,7 +27,7 @@ and live cold verification remain in progress for this work order.
 - `npm run check`: passed.
 - `cargo test --manifest-path src-tauri/Cargo.toml`: 12 passed.
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`: passed.
-- `npm run test:e2e`: 46 passed, 2 expected project skips.
+- `npm run test:e2e`: 48 passed across desktop and 390 px.
 - `npm run test:native-claim -- local-only`: passed with zero external connections.
 - `npm run test:native-claim -- free-core`: passed through import, reopen,
   encrypted scan, restore, and both report formats.
@@ -33,8 +35,12 @@ and live cold verification remain in progress for this work order.
   and 13.39 KB gzip, CSS is 18.92 KB raw and 5.00 KB gzip.
 - Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices,
   100 SEO; LCP 1.2 s, CLS 0, TBT 0 ms.
-- Local URL verifier: no console errors; title, language, H1, main, labels, and
-  image alternatives pass.
+- A fresh clone of `1351d2a` passed `npm ci`, `npm test` (17), `npm run check`,
+  `npm run build`, `npm run test:e2e` (48), Cargo tests (12), and Clippy.
+- Live `verify-url.sh`: 200, no console errors, route title, `lang=en`, one H1,
+  main landmark, and complete image alternatives. Live Axe on `/`, `?demo=1`,
+  privacy, terms, and the real 404 passed at desktop and 390 px with no serious
+  or critical findings. See `.factory/qa-artifacts/polish-2-live/`.
 
 ## Verify
 
@@ -62,5 +68,5 @@ release path.
 
 ## Remaining work
 
-Push/tag v0.1.5, wait for all release assets and checksums, update the same-origin
-manifest, deploy `dist/site`, and cold-check every live route and finding.
+None. The binaries are intentionally unsigned; their v0.1.5 release checksums
+are published and the installer scripts verify them before installation.

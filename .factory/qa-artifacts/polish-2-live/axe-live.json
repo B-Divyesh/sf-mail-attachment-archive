@@ -1,0 +1,112 @@
+[
+  {
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "route": "/",
+    "status": 200,
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "route": "/?demo=1",
+    "status": 200,
+    "title": "Demo — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "route": "/privacy/",
+    "status": 200,
+    "title": "Privacy — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "route": "/terms/",
+    "status": 200,
+    "title": "Terms — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "route": "/missing-page",
+    "status": 404,
+    "title": "Page not found — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "route": "/",
+    "status": 200,
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "route": "/?demo=1",
+    "status": 200,
+    "title": "Demo — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "route": "/privacy/",
+    "status": 200,
+    "title": "Privacy — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "route": "/terms/",
+    "status": 200,
+    "title": "Terms — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "route": "/missing-page",
+    "status": 404,
+    "title": "Page not found — Mail Attachment Archive",
+    "serious": [],
+    "errors": []
+  }
+]
