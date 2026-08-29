@@ -52,7 +52,7 @@
       {
         "name": "reopened archive rendered",
         "passed": true,
-        "visible": "leaving-account.mbox · created 8/29/2026, 9:56:47 AM"
+        "visible": "leaving-account.mbox · created 8/29/2026, 11:00:32 AM"
       },
       {
         "name": "encrypted archive awaits passphrase",
@@ -82,7 +82,7 @@
     ],
     "title": "Mail Attachment Archive — check an MBOX export",
     "h1": "Your attachment ledger",
-    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 9:56:47 AMOpen archiveImport MBOX export Messages1Attachment references1Duplicates0Resolved locally100.0% Search this archiveAll statusesVerifiedDuplicatesNeeds attentionExport CSVExport JSONRestored one checked file. CSV and JSON reports saved. Attachment manifestFiles and references1 shownPDFclosing-statement.pdfYour final statement · 42 B38626ebb…24b89f✓ Verified Verification reportEvery decoded file is accounted for100.0%resolvedSource bytes42 BStored once42 BSpace avoided0 BStorageEncryptedNo failures reported",
+    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 11:00:32 AMOpen archiveImport MBOX export Messages1Attachment references1Duplicates0Resolved locally100.0% Search this archiveAll statusesVerifiedDuplicatesNeeds attentionExport CSVExport JSONRestored one checked file. CSV and JSON reports saved. Attachment manifestFiles and references1 shownPDFclosing-statement.pdfYour final statement · 42 B38626ebb…24b89f✓ Verified Verification reportEvery decoded file is accounted for100.0%resolvedSource bytes42 BStored once42 BSpace avoided0 BStorageEncryptedNo failures reported",
     "url": "tauri://localhost",
     "cookie": "",
     "storageKeys": []
