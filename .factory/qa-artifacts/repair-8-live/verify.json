@@ -1,0 +1,14 @@
+{
+  "url": "https://mail-attachment-archive.sociobot.in/",
+  "loadMs": 743,
+  "errors": [],
+  "a11y": {
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 2377
+  }
+}

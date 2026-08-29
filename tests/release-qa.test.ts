@@ -65,10 +65,14 @@ describe("release QA contracts", () => {
           : `https://github.com/${repository}/releases/download/${tag}/${name}`
     }));
     const checksums = Object.values(filenames).map(filename => `${sha256}  ${filename}`).join("\n");
-    const fetcher = (stale = false): FetchLike => async url => {
+    const fetcher = (stale: boolean | "stale-version" = false): FetchLike => async url => {
       const json = (value: unknown) => ({ ok: true, status: 200, json: async () => value, text: async () => JSON.stringify(value) });
       const text = (value: string) => ({ ok: true, status: 200, json: async () => JSON.parse(value), text: async () => value });
-      if (url === `${origin}/latest.json`) return json({ ...manifest, source_commit: stale ? "f".repeat(40) : sourceCommit });
+      if (url === `${origin}/latest.json`) return json({
+        ...manifest,
+        version: stale === "stale-version" ? "1.2.2" : manifest.version,
+        source_commit: stale ? "f".repeat(40) : sourceCommit
+      });
       if (url === `${origin}/install.sh` || url === `${origin}/install.ps1`) return text(`repo="${repository}"\nhttps://github.com/$repo/releases/latest/download/latest.json`);
       if (url === `https://api.github.com/repos/${repository}/releases/tags/${tag}`) return json({ tag_name: tag, target_commitish: sourceCommit, assets: releaseAssets });
       if (url.endsWith("/latest.json")) return json(manifest);
@@ -78,6 +82,7 @@ describe("release QA contracts", () => {
 
     await expect(verifyReleaseProvenance({ liveOrigin: origin, repository, tag, sourceCommit, fetcher: fetcher() })).resolves.toMatchObject({ source_commit: sourceCommit });
     await expect(stageReleaseManifest({ repository, tag, sourceCommit, fetcher: fetcher() })).resolves.toMatchObject({ manifest: { source_commit: sourceCommit } });
+    await expect(verifyReleaseProvenance({ liveOrigin: origin, repository, tag, sourceCommit, fetcher: fetcher("stale-version") })).rejects.toThrow(/Live manifest version/);
     await expect(verifyReleaseProvenance({ liveOrigin: origin, repository, tag, sourceCommit, fetcher: fetcher(true) })).rejects.toThrow(/Live manifest source_commit/);
   });
 

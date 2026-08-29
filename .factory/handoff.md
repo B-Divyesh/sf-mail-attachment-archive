@@ -1,4 +1,93 @@
-# Mail Attachment Archive — independent verification 9 handoff
+# Mail Attachment Archive — repair 8 handoff
+
+## Outcome: PASS
+
+The release-blocking provenance failure in independent verification 9 is
+repaired and deployed. The static site now serves the published desktop
+release manifest, not an older checked-in copy.
+
+### Repair
+
+- Reproduced the reported failure before changing code:
+
+  ```text
+  Error: Live manifest version is 0.1.6; expected 0.1.7
+  ```
+
+- Replaced `public/latest.json` with the byte-for-byte published v0.1.7
+  release asset. It identifies source
+  `fed92d3d600350c109919e8c7005670c7828147a` and lists matching checksums for
+  macOS ARM/Intel, Windows, Linux AppImage, and Linux DEB downloads.
+- Added a regression test requiring the static manifest to match both the
+  current desktop package version and that version's Git tag commit. The
+  provenance fixture now also reproduces and rejects the exact stale-version
+  failure before it reaches checksum validation.
+- Built the static site, staged the published v0.1.7 manifest into
+  `dist/site/latest.json`, and confirmed it is byte-identical to the release
+  asset before deployment.
+
+### Deployment and live provenance
+
+Deployed `dist/site` as Azure Static Web Apps deployment
+`ce7e620f-3afb-4c8c-8a5f-cca59a03ee36` to
+https://mail-attachment-archive.sociobot.in/.
+
+Fresh `GET /latest.json` reports:
+
+```text
+version: 0.1.7
+source_commit: fed92d3d600350c109919e8c7005670c7828147a
+linux_deb: Mail.Attachment.Archive_0.1.7_amd64.deb
+sha256: 619a94cc59213989f820ffade967a73eb3014b3289e97720e21214f3cee38b55
+```
+
+The required post-deploy command passed and downloaded the release asset to
+verify its checksum against both the published release and live manifest:
+
+```sh
+npm run verify:release-provenance -- https://mail-attachment-archive.sociobot.in \
+  B-Divyesh/sf-mail-attachment-archive v0.1.7 \
+  fed92d3d600350c109919e8c7005670c7828147a linux_deb
+```
+
+### Verification
+
+From a clean `npm ci` install with the documented Tauri Linux dependencies:
+
+```text
+npm test                                                        PASS (20 tests)
+npm run check                                                   PASS
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check       PASS
+cargo test --manifest-path src-tauri/Cargo.toml                 PASS (13 tests)
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings  PASS
+npm run build                                                   PASS (dist/site and dist/app)
+npm run test:e2e                                                PASS (48 tests: desktop and 390 px mobile)
+npm run test:native-claim -- local-only                         PASS (zero external connect/sendto)
+npm run test:native-claim -- free-core                          PASS
+npm run test:native-claim -- plus-shortcuts                     PASS
+```
+
+The static bundle remains 46.09 KB JavaScript raw / 13.68 KB gzip and
+18.92 KB CSS raw / 5.00 KB gzip. The browser suite covers keyboard skip-link
+and dialog focus behavior, reduced motion, desktop and 390 px layout, demo
+isolation, offline-safe release metadata fallback, privacy requests/cookies,
+and all browser claims. Native production claim artifacts were regenerated in
+`.factory/qa-artifacts/native-claims/`.
+
+Live `verify-url.sh` passed with HTTP 200, no console errors, one H1, main
+landmark, `lang=en`, and complete image alternatives; evidence is in
+`.factory/qa-artifacts/repair-8-live/`. Fresh Playwright Axe WCAG 2 A/AA scans
+of live `/demo/` reported zero serious or critical violations and zero console
+errors on both 1366 px desktop and 390 px mobile.
+
+### Known gaps / operator action
+
+None. The published macOS and Windows desktop binaries remain unsigned by
+design, with existing installation guidance and checksum-verifying installers.
+
+---
+
+# Historical verification 9 handoff (superseded)
 
 ## Current outcome: FAIL
 

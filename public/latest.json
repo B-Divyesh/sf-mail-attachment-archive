@@ -1,12 +1,32 @@
 {
-  "version": "0.1.6",
-  "source_commit": "ab987ec1720768b05faa39509a1cb7c641849321",
-  "published_at": "2026-08-29T06:43:38.492Z",
+  "version": "0.1.7",
+  "source_commit": "fed92d3d600350c109919e8c7005670c7828147a",
+  "published_at": "2026-08-29T08:34:28.838Z",
   "platforms": {
-    "macos": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.6/Mail.Attachment.Archive_0.1.6_aarch64.dmg", "sha256": "7e0ce39e287ae5bfc0ef27ce9bb831a163c2d1c0ae2eaa27e1e235f969dd8e83", "filename": "Mail.Attachment.Archive_0.1.6_aarch64.dmg" },
-    "macos_intel": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.6/Mail.Attachment.Archive_0.1.6_x64.dmg", "sha256": "40018c0da218206524ec53428349423273d508acd58e5d8c9bb795080734148e", "filename": "Mail.Attachment.Archive_0.1.6_x64.dmg" },
-    "windows": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.6/Mail.Attachment.Archive_0.1.6_x64-setup.exe", "sha256": "27b3635d67e30495d54d2f42e2676641e9ca09e985c2f135f844ed0972f4ee94", "filename": "Mail.Attachment.Archive_0.1.6_x64-setup.exe" },
-    "linux": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.6/Mail.Attachment.Archive_0.1.6_amd64.AppImage", "sha256": "780098d83b6b3a65375b19b3cfd484421061489b5de49a18f088ca97db132c6f", "filename": "Mail.Attachment.Archive_0.1.6_amd64.AppImage" },
-    "linux_deb": { "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.6/Mail.Attachment.Archive_0.1.6_amd64.deb", "sha256": "cbae3f196fa3a86cf4c3acf2b0750bc5344369a966b6ec79571426a6c88dc73c", "filename": "Mail.Attachment.Archive_0.1.6_amd64.deb" }
+    "macos": {
+      "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.7/Mail.Attachment.Archive_0.1.7_aarch64.dmg",
+      "sha256": "44a8ddac19ebff83dbcb718db6cd0288f031c5fcb880eeb63753791e4304eb82",
+      "filename": "Mail.Attachment.Archive_0.1.7_aarch64.dmg"
+    },
+    "macos_intel": {
+      "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.7/Mail.Attachment.Archive_0.1.7_x64.dmg",
+      "sha256": "fcdd7a74cb9d96eecbe6445b52686fdd03d3dfb3cc69a8aebb2e15310a767acd",
+      "filename": "Mail.Attachment.Archive_0.1.7_x64.dmg"
+    },
+    "windows": {
+      "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.7/Mail.Attachment.Archive_0.1.7_x64-setup.exe",
+      "sha256": "fb3242d3489130de3c80ae40d7c4b72cc83b0193d7adb2917b03a0c562ca5501",
+      "filename": "Mail.Attachment.Archive_0.1.7_x64-setup.exe"
+    },
+    "linux": {
+      "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.7/Mail.Attachment.Archive_0.1.7_amd64.AppImage",
+      "sha256": "2ca464c2e17faa6aff0333a54f072a24ca2ebbaacda19500376e91b7bd7bf4c7",
+      "filename": "Mail.Attachment.Archive_0.1.7_amd64.AppImage"
+    },
+    "linux_deb": {
+      "url": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.7/Mail.Attachment.Archive_0.1.7_amd64.deb",
+      "sha256": "619a94cc59213989f820ffade967a73eb3014b3289e97720e21214f3cee38b55",
+      "filename": "Mail.Attachment.Archive_0.1.7_amd64.deb"
+    }
   }
 }

@@ -7,6 +7,16 @@ import { describe, expect, it } from "vitest";
 import { parseReleaseManifest, releasePlatforms } from "../src/release-manifest";
 
 describe("same-origin release manifest", () => {
+  it("ships the current tagged desktop release manifest with the static site", () => {
+    const manifest = parseReleaseManifest(JSON.parse(readFileSync("public/latest.json", "utf8")));
+    const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
+    const taggedCommit = execFileSync("git", ["rev-list", "-n", "1", `v${packageVersion}`], { encoding: "utf8" }).trim();
+
+    expect(manifest).not.toBeNull();
+    expect(manifest!.version).toBe(packageVersion);
+    expect(manifest!.source_commit).toBe(taggedCommit);
+  });
+
   it("@claim:release-assets keeps a checksummed asset for every supported platform", () => {
     const manifest = parseReleaseManifest(JSON.parse(readFileSync("public/latest.json", "utf8")));
     expect(manifest).not.toBeNull();
