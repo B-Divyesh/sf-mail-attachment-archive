@@ -1,0 +1,107 @@
+PASS desktop / HTTP 200 — 200
+PASS desktop / one h1
+PASS desktop / main landmark
+PASS desktop / lang=en
+PASS desktop / axe serious/critical
+PASS desktop / reduced motion — 0 running animations
+PASS desktop / horizontal overflow — 0px
+PASS desktop /demo/ HTTP 200 — 200
+PASS desktop /demo/ one h1
+PASS desktop /demo/ main landmark
+PASS desktop /demo/ lang=en
+PASS desktop /demo/ axe serious/critical
+PASS desktop /demo/ reduced motion — 0 running animations
+PASS desktop /demo/ horizontal overflow — 0px
+PASS desktop /privacy/ HTTP 200 — 200
+PASS desktop /privacy/ one h1
+PASS desktop /privacy/ main landmark
+PASS desktop /privacy/ lang=en
+PASS desktop /privacy/ axe serious/critical
+PASS desktop /privacy/ reduced motion — 0 running animations
+PASS desktop /privacy/ horizontal overflow — 0px
+PASS desktop /terms/ HTTP 200 — 200
+PASS desktop /terms/ one h1
+PASS desktop /terms/ main landmark
+PASS desktop /terms/ lang=en
+PASS desktop /terms/ axe serious/critical
+PASS desktop /terms/ reduced motion — 0 running animations
+PASS desktop /terms/ horizontal overflow — 0px
+PASS desktop unknown route is HTTP 404 — 404
+PASS desktop designed 404
+PASS desktop skip link first
+PASS desktop visible focus style — {"outline":"rgb(84, 214, 162) solid 3px","outlineColor":"rgb(84, 214, 162)","outlineWidth":"3px","boxShadow":"none"}
+PASS desktop skip link targets main
+PASS desktop one-click demo — https://mail-attachment-archive.sociobot.in/demo/
+PASS desktop demo seeded — 4 records
+PASS desktop persistent demo banner
+PASS desktop isolated demo storage — demo:mail-attachment-archive:state
+PASS desktop no cookies
+PASS desktop hostile/long search safe
+PASS desktop empty search state
+PASS desktop search recovery
+PASS desktop issue boundary filter
+PASS desktop reset recovers full sample
+PASS desktop CSV export — 974 bytes
+PASS desktop JSON export — 2579 bytes
+PASS desktop blank license recovery
+PASS desktop blank license sends no request
+PASS desktop invalid license gets controlled API response — 200
+PASS desktop verification sends only license token — https://api.sociobot.in/api/v1/products/mail-attachment-archive/verify?license=[redacted]
+PASS desktop invalid license visible recovery
+PASS desktop no undisclosed outgoing requests
+PASS desktop no failed requests
+PASS desktop no console/page errors
+PASS mobile390 / HTTP 200 — 200
+PASS mobile390 / one h1
+PASS mobile390 / main landmark
+PASS mobile390 / lang=en
+PASS mobile390 / axe serious/critical
+PASS mobile390 / reduced motion — 0 running animations
+PASS mobile390 / horizontal overflow — 0px
+PASS mobile390 /demo/ HTTP 200 — 200
+PASS mobile390 /demo/ one h1
+PASS mobile390 /demo/ main landmark
+PASS mobile390 /demo/ lang=en
+PASS mobile390 /demo/ axe serious/critical
+PASS mobile390 /demo/ reduced motion — 0 running animations
+PASS mobile390 /demo/ horizontal overflow — 0px
+PASS mobile390 /privacy/ HTTP 200 — 200
+PASS mobile390 /privacy/ one h1
+PASS mobile390 /privacy/ main landmark
+PASS mobile390 /privacy/ lang=en
+PASS mobile390 /privacy/ axe serious/critical
+PASS mobile390 /privacy/ reduced motion — 0 running animations
+PASS mobile390 /privacy/ horizontal overflow — 0px
+PASS mobile390 /terms/ HTTP 200 — 200
+PASS mobile390 /terms/ one h1
+PASS mobile390 /terms/ main landmark
+PASS mobile390 /terms/ lang=en
+PASS mobile390 /terms/ axe serious/critical
+PASS mobile390 /terms/ reduced motion — 0 running animations
+PASS mobile390 /terms/ horizontal overflow — 0px
+PASS mobile390 unknown route is HTTP 404 — 404
+PASS mobile390 designed 404
+PASS mobile390 skip link first
+PASS mobile390 visible focus style — {"outline":"rgb(84, 214, 162) solid 3px","outlineColor":"rgb(84, 214, 162)","outlineWidth":"3px","boxShadow":"none"}
+PASS mobile390 skip link targets main
+PASS mobile390 one-click demo — https://mail-attachment-archive.sociobot.in/demo/
+PASS mobile390 demo seeded — 4 records
+PASS mobile390 persistent demo banner
+PASS mobile390 isolated demo storage — demo:mail-attachment-archive:state
+PASS mobile390 no cookies
+PASS mobile390 hostile/long search safe
+PASS mobile390 empty search state
+PASS mobile390 search recovery
+PASS mobile390 issue boundary filter
+PASS mobile390 reset recovers full sample
+PASS mobile390 CSV export — 974 bytes
+PASS mobile390 JSON export — 2579 bytes
+PASS mobile390 / 44px targets — []
+PASS mobile390 /demo/ 44px targets — []
+PASS mobile390 /privacy/ 44px targets — []
+PASS mobile390 /terms/ 44px targets — []
+PASS mobile390 /404.html 44px targets — []
+PASS mobile390 no undisclosed outgoing requests
+PASS mobile390 no failed requests
+PASS mobile390 no console/page errors
+LIVE_BROWSER_SUMMARY failures=0

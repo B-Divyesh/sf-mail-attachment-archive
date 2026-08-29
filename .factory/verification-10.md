@@ -1,7 +1,9 @@
 # Independent verification 10 — PASS
 
-**Candidate:** `8090f7225b9f8ce5db28801d67229092f0d7d75c`  
-**Live URL:** https://mail-attachment-archive.sociobot.in/  
+**Candidate:** `8090f7225b9f8ce5db28801d67229092f0d7d75c`
+
+**Live URL:** https://mail-attachment-archive.sociobot.in/
+
 **Verified:** 29 August 2026 UTC from the clean candidate checkout
 
 ## Verdict
