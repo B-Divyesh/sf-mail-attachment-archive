@@ -72,6 +72,7 @@ npm run build        # dist/site and dist/app
 npm run test:e2e     # Chromium desktop and 390 px
 npm run test:native-claim -- local-only
 npm run test:native-claim -- free-core
+npm run test:native-claim -- plus-shortcuts
 ```
 
 The deployable static site is exactly `dist/site/`. `npm run build:site`
@@ -100,10 +101,11 @@ reported as file corruption. A successful full scan writes a verification report
 ## Privacy, payment, and security
 
 The free app includes import, duplicate checks, encryption, restoration, and
-all verification reports. Archive Plus costs $29 once and adds workspace
-shortcuts. Import, export, accessibility, and safety features remain free. Dodo
-hosts checkout. A revoked license no longer enables Plus features. See the
-hosted `/privacy/` and `/terms/` pages.
+all verification reports. Archive Plus costs $29 once. It adds saved recent
+archive shortcuts and a compact attachment ledger. Import, export,
+accessibility, and safety features remain free. Dodo hosts checkout. A revoked
+license no longer enables Plus features. See the hosted `/privacy/` and
+`/terms/` pages.
 
 Attachments can contain malware. The app stores attachments without opening
 them. A restored attachment should be scanned before opening. Please report

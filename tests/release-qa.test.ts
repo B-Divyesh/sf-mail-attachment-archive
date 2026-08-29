@@ -32,6 +32,23 @@ describe("release QA contracts", () => {
     expect(manifestBuilder).toContain("source_commit: sourceCommit.toLowerCase()");
   });
 
+  it("@claim:release-workflow-assets builds every supported desktop artifact and publishes both verification files", () => {
+    const workflow = readFileSync(".github/workflows/release.yml", "utf8");
+    const requiredMatrixEntries = [
+      "os: macos-latest\n            target: aarch64-apple-darwin",
+      "os: macos-latest\n            target: x86_64-apple-darwin",
+      "os: windows-latest\n            target: x86_64-pc-windows-msvc",
+      "os: ubuntu-22.04\n            target: x86_64-unknown-linux-gnu"
+    ];
+    for (const entry of requiredMatrixEntries) expect(workflow).toContain(entry);
+    expect(workflow).toContain('tags: ["v*"]');
+    expect(workflow).toContain("tauri-apps/tauri-action@v0");
+    expect(workflow).toContain("args: --target ${{ matrix.target }}");
+    expect(workflow).toContain("node scripts/make-release-manifest.mjs release-assets");
+    expect(workflow).toContain("release-assets/SHA256SUMS release-assets/latest.json");
+    expect(workflow).toContain("gh release upload \"$RELEASE_TAG\"");
+  });
+
   it("refuses to publish a tag from a different checked-out source commit", () => {
     const directory = mkdtempSync(join(tmpdir(), "maa-release-identity-"));
     const verifyScript = resolve("scripts/verify-release-identity.mjs");

@@ -1,4 +1,4 @@
-# Copy audit — polish 2
+# Copy audit — polish 3
 
 Audited 29 August 2026 after the cumulative repair. Visible landing-page
 sentences, headings, labels, actions, and factual lines are listed below.
@@ -107,3 +107,15 @@ reviews 1 and 2 are absent.
 Search evidence: `rg` found no remaining visitor-facing “exception report,”
 “MBOX file,” “local-first,” “dependency-light,” “passphrase-gated,” “fails
 closed,” funding-benefit, or slogan copy.
+
+## Polish 3 additions
+
+The landing first screen remains unchanged because review 3 found it clear on
+desktop and phone. README now says “Archive Plus costs $29 once.” and “It adds
+saved recent archive shortcuts and a compact attachment ledger.” These have 5
+and 11 words and are covered by `@claim:plus-shortcuts`.
+
+“Re-verifies plain files when an archive is reopened” is covered by
+`@claim:plain-reopen-integrity`. The release-workflow sentences are covered by
+`@claim:release-workflow-assets`. Each new sentence is under 22 words and has
+no banned wording.

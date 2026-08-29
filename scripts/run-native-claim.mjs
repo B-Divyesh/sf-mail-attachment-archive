@@ -4,11 +4,12 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSy
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-// Single regression implementation for @claim:local-only and @claim:free-core.
-// The claim id selects an independent clean packaged-app run.
+// Single regression implementation for @claim:local-only, @claim:free-core,
+// and @claim:plus-shortcuts. The claim id selects an independent clean
+// packaged-app run.
 const claim = process.argv[2];
-if (!new Set(["local-only", "free-core"]).has(claim)) {
-  throw new Error("Use: npm run test:native-claim -- local-only|free-core");
+if (!new Set(["local-only", "free-core", "plus-shortcuts"]).has(claim)) {
+  throw new Error("Use: npm run test:native-claim -- local-only|free-core|plus-shortcuts");
 }
 
 for (const tool of ["xvfb-run", "strace"]) {

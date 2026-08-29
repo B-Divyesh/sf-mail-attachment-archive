@@ -14,10 +14,10 @@ const appMode = __APP_BUILD__ || new URLSearchParams(location.search).get("app")
 const demoMode = location.pathname.replace(/\/+$/, "").endsWith("/demo") || new URLSearchParams(location.search).get("demo") === "1";
 const icon = `<svg class="mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M5 11h12l5 6 5-6h12v22H5z"/><circle cx="12" cy="26" r="2"/><circle cx="22" cy="26" r="2"/><circle cx="32" cy="26" r="2"/><path d="M12 26h20"/></svg>`;
 const siteOrigin = "https://mail-attachment-archive.sociobot.in";
-const appVersion = "0.1.5";
+const appVersion = "0.1.6";
 
 interface NativeClaimConfig {
-  claim: "local-only" | "free-core";
+  claim: "local-only" | "free-core" | "plus-shortcuts";
   sourcePath: string;
   archivePath: string;
   restoredPath: string;
@@ -375,7 +375,17 @@ async function runNativeClaimHarness(): Promise<void> {
     localStorage.clear();
     const state = document.querySelector<HTMLElement>("#app-state")!;
     state.innerHTML = `<div class="loading-state" id="native-claim-progress"><p class="eyebrow">Packaged app verification</p><h2>Choosing the test MBOX export</h2><p>The production command bridge is processing a clean local fixture.</p></div>`;
-    check("unlicensed start", !storedLicense().token, "The complete archive engine is free");
+    const recordedLicenseKey = "sb_license:mail-attachment-archive";
+    const recordedVerdictKey = `${recordedLicenseKey}:verdict`;
+    const hasRecordedPlusLicense = config.claim === "plus-shortcuts";
+    if (hasRecordedPlusLicense) {
+      const token = "recorded-valid-license";
+      localStorage.setItem(recordedLicenseKey, token);
+      localStorage.setItem(recordedVerdictKey, JSON.stringify({ token, valid: true, checkedAt: Date.now() }));
+      check("recorded valid license accepted", storedLicense().valid, "Archive Plus is active from a recorded verification");
+    } else {
+      check("unlicensed start", !storedLicense().token, "The complete archive engine is free");
+    }
     check("source choice shown", state.textContent?.includes("Choosing the test MBOX export") === true, state.textContent || "");
 
     const encrypted = config.claim === "free-core";
@@ -390,11 +400,32 @@ async function runNativeClaimHarness(): Promise<void> {
     renderArchive(imported);
     check("import result rendered", document.querySelectorAll(".attachment-row").length === imported.attachments.length, document.querySelector("#visible-count")?.textContent || "");
     check("free export controls rendered", !!document.querySelector("#export-csv") && !!document.querySelector("#export-json"), "Export CSV · Export JSON");
-    check("Plus remains locked", !document.querySelector("#compact-ledger"), "No license token");
+    if (hasRecordedPlusLicense) {
+      const compact = document.querySelector<HTMLButtonElement>("#compact-ledger");
+      check("compact ledger is available", !!compact, "Compact");
+      compact?.click();
+      check("compact ledger works", document.querySelector(".attachment-list")?.classList.contains("compact") === true, "Rows compacted");
+      renderEmpty();
+      const recent = document.querySelector<HTMLButtonElement>(".recent-list button");
+      check("saved recent archive shortcut is available", !!recent, recent?.textContent || "");
+      recent?.click();
+      await new Promise(resolve => setTimeout(resolve, 50));
+      check("saved recent archive shortcut reopens the archive", document.querySelector("#archive-subtitle")?.textContent?.includes(imported.source_name) === true, document.querySelector("#archive-subtitle")?.textContent || "");
+    } else {
+      check("Plus remains locked", !document.querySelector("#compact-ledger"), "No license token");
+    }
 
     const reopened = await invoke<ArchiveManifest>("load_manifest", { manifestPath: currentManifestPath });
     renderArchive(reopened);
     check("reopened archive rendered", document.querySelector("#archive-subtitle")?.textContent?.includes(reopened.source_name) === true, document.querySelector("#archive-subtitle")?.textContent || "");
+
+    if (hasRecordedPlusLicense) {
+      localStorage.setItem(recordedVerdictKey, JSON.stringify({ token: "recorded-valid-license", valid: false, checkedAt: Date.now() }));
+      renderArchive(reopened);
+      check("revoked license hides compact ledger", !document.querySelector("#compact-ledger"), "Compact control removed");
+      renderEmpty();
+      check("revoked license hides saved recent shortcuts", !document.querySelector(".recent-list"), "Recent shortcuts removed");
+    }
 
     let checked = reopened;
     if (encrypted) {

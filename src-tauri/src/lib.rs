@@ -94,7 +94,10 @@ struct NativeClaimConfig {
 fn native_claim_config() -> Option<NativeClaimConfig> {
     let root = PathBuf::from(std::env::var("MAA_NATIVE_CLAIM_ROOT").ok()?);
     let claim = std::env::var("MAA_NATIVE_CLAIM_ID").ok()?;
-    if !matches!(claim.as_str(), "local-only" | "free-core") {
+    if !matches!(
+        claim.as_str(),
+        "local-only" | "free-core" | "plus-shortcuts"
+    ) {
         return None;
     }
     Some(NativeClaimConfig {
@@ -336,6 +339,12 @@ fn load_manifest(manifest_path: String) -> Result<ArchiveManifest, String> {
                 detail: "The stored bytes no longer match the import checksum.".into(),
             });
         }
+    }
+    // A plain archive can be fully rechecked without a passphrase. Persist the
+    // refreshed report so reopening exposes the same corruption evidence to
+    // the desktop UI and to a person who later opens the JSON report.
+    if !manifest.encrypted {
+        write_verification_report(root, &manifest)?;
     }
     Ok(manifest)
 }
@@ -1125,6 +1134,47 @@ mod tests {
             .any(|issue| issue.kind == "encrypted_file_corrupt"));
         let report = fs::read_to_string(destination.join("verification-report.json")).unwrap();
         assert!(report.contains("encrypted_file_corrupt"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    // @claim:plain-reopen-integrity
+    fn claim_plain_reopen_integrity_reports_corruption_in_the_saved_report() {
+        let root = fresh_claim_root("plain-reopen-integrity");
+        let source = root.join("source.mbox");
+        let archive = root.join("archive");
+        fs::create_dir_all(&root).unwrap();
+        write_claim_mbox(&source);
+
+        let imported = import_mbox(
+            source.to_string_lossy().to_string(),
+            archive.to_string_lossy().to_string(),
+            false,
+            None,
+        )
+        .unwrap();
+        fs::write(
+            archive.join(&imported.attachments[0].stored_path),
+            b"changed bytes",
+        )
+        .unwrap();
+
+        let reopened =
+            load_manifest(archive.join("manifest.json").to_string_lossy().to_string()).unwrap();
+        assert_eq!(reopened.attachments[0].status, "corrupt");
+        assert!(reopened
+            .issues
+            .iter()
+            .any(|issue| issue.kind == "checksum_mismatch"));
+
+        let report: ArchiveManifest =
+            serde_json::from_slice(&fs::read(archive.join("verification-report.json")).unwrap())
+                .unwrap();
+        assert_eq!(report.attachments[0].status, "corrupt");
+        assert!(report
+            .issues
+            .iter()
+            .any(|issue| issue.kind == "checksum_mismatch"));
         fs::remove_dir_all(root).unwrap();
     }
 

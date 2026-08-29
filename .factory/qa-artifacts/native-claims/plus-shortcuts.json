@@ -1,0 +1,95 @@
+{
+  "claim": "plus-shortcuts",
+  "packagedBinary": "/work/repo/src-tauri/target/release/mail-attachment-archive",
+  "commandBridge": [
+    "import_mbox",
+    "load_manifest"
+  ],
+  "network": {
+    "tracedSyscalls": "connect,sendto",
+    "externalConnections": 0
+  },
+  "sourceUnchanged": true,
+  "manifest": {
+    "messages": 1,
+    "attachments": 1,
+    "encrypted": false
+  },
+  "ui": {
+    "claim": "plus-shortcuts",
+    "passed": true,
+    "error": null,
+    "checks": [
+      {
+        "name": "recorded valid license accepted",
+        "passed": true,
+        "visible": "Archive Plus is active from a recorded verification"
+      },
+      {
+        "name": "source choice shown",
+        "passed": true,
+        "visible": "Packaged app verificationChoosing the test MBOX exportThe production command bridge is processing a clean local fixture."
+      },
+      {
+        "name": "import result rendered",
+        "passed": true,
+        "visible": "1 shown"
+      },
+      {
+        "name": "free export controls rendered",
+        "passed": true,
+        "visible": "Export CSV · Export JSON"
+      },
+      {
+        "name": "compact ledger is available",
+        "passed": true,
+        "visible": "Compact"
+      },
+      {
+        "name": "compact ledger works",
+        "passed": true,
+        "visible": "Rows compacted"
+      },
+      {
+        "name": "saved recent archive shortcut is available",
+        "passed": true,
+        "visible": "archive/tmp/maa-native-plus-shortcuts-eMWfO1/archive/manifest.json"
+      },
+      {
+        "name": "saved recent archive shortcut reopens the archive",
+        "passed": true,
+        "visible": "leaving-account.mbox · created 8/29/2026, 6:24:27 AM"
+      },
+      {
+        "name": "reopened archive rendered",
+        "passed": true,
+        "visible": "leaving-account.mbox · created 8/29/2026, 6:24:27 AM"
+      },
+      {
+        "name": "revoked license hides compact ledger",
+        "passed": true,
+        "visible": "Compact control removed"
+      },
+      {
+        "name": "revoked license hides saved recent shortcuts",
+        "passed": true,
+        "visible": "Recent shortcuts removed"
+      },
+      {
+        "name": "no authentication state",
+        "passed": true,
+        "visible": "No cookies or identity keys"
+      }
+    ],
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "h1": "Your attachment ledger",
+    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 6:24:27 AMOpen archiveImport MBOX export No archive openStart with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.Import your first MBOX exportLoad sample archiveWhat happens to my files?The app reads them locally, stores attachments without opening them, and writes a manifest plus a verification report beside them.",
+    "url": "tauri://localhost",
+    "cookie": "",
+    "storageKeys": [
+      "maa:recent-archives",
+      "sb_license:mail-attachment-archive:verdict",
+      "sb_license:mail-attachment-archive"
+    ]
+  }
+}
