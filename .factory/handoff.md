@@ -1,55 +1,39 @@
-# Mail Attachment Archive — polish 1 handoff
+# Mail Attachment Archive — review 2 handoff
 
 ## Outcome
 
-Repaired every finding in adversarial review 1. The landing now has phone-safe
-downloads, a direct isolated `?demo=1` route, four original captioned desktop
-workflow frames, consistent route navigation, route focus announcements,
-complete static metadata, and rewritten plain-language copy. The desktop app
-has an outcome-level free-core test and no opener capability.
+Completed the adversarial first-read review without changing product code.
+The verdict is **FAIL**. The review is in `.factory/review-2.md`.
 
-## Verification
+## Verification performed
 
-Fresh-dependency setup used `npm ci` and the README Tauri Linux prerequisites.
+- Cold live checks at desktop and 390px; no console/page errors.
+- Live `?demo=1` sandbox, reset, exit, storage namespace, and request-log
+  checks.
+- All 18 declared claim commands passed after `npm ci` and documented Tauri
+  Linux prerequisites were installed.
+- `npm test` (16 passed), `npm run check`, `npm run build`, and the full
+  Playwright suite (48 tests) passed.
+- Live Axe scans at 390px found zero serious/critical issues on landing, demo,
+  privacy, terms, and 404.
 
-- `npm test`: 16 passing.
-- `npm run check`: passing.
-- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`: passing.
-- `cargo test --manifest-path src-tauri/Cargo.toml`: 12 passing.
-- `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`: passing.
-- `npm run build`: passing; produces `dist/site` and `dist/app`.
-- `npm run test:e2e`: 48 passing across desktop Chromium and 390 px mobile.
-- Every one of the 18 exact commands in `.factory/claims.json` passed from the
-  clean dependency install. The browser claims ran in desktop and mobile
-  contexts; native claims used temporary MBOX/archive fixtures.
+## Remaining work
 
-The production site bundle is 41.94 KB raw / 12.74 KB gzip. CSS is 18.92 KB
-raw / 5.00 KB gzip. No external fonts or scripts were added.
+The review reopens F-1-2 and F-1-3 as blockers: the green `local-only` and
+`free-core` tests call backend Rust functions directly instead of proving the
+public claims through a packaged desktop flow. F-1-29 also remains live as an
+untestable funding-benefit claim. The review records four further unlisted
+claims and three plain-language copy findings.
 
-## Key verification coverage
+## How to reproduce
 
-- Android and iPhone user agents receive no AppImage, DEB, DMG, or EXE link.
-- `?demo=1` renders the persistent demo banner, four realistic sample rows,
-  Reset demo, and Start for real. It uses only the `demo:` storage namespace.
-- The native free-core fixture completes encrypted import, reopen, full scan,
-  restore, CSV export, and JSON export without a license.
-- The packaged capability list has no `opener:` permission; attachment import
-  writes archive files without opening them.
-- Browser route, Back, dialog, mobile target, static metadata, and Axe tests
-  are covered by Playwright.
+```sh
+npm ci
+npm test
+npm run check
+npm run build
+npm run test:e2e
+```
 
-## Deployment
-
-Committed and pushed repair `c67e36f43fb48dec0c8bbefbd0e73b3cc4057a90` to
-`main`, then deployed `dist/site` with the supplied static deployment work-order
-script. A cold live check served `assets/index-BO9MRb6X.js`; it returned 200 for
-`/?demo=1`, `/demo/`, `/privacy/`, and `/terms/`, and returned the designed 404
-for an unknown path. `verify-url.sh` passed in 734 ms with no console errors.
-Live mobile Axe found zero serious or critical violations. Evidence:
-`.factory/qa-artifacts/polish-1/verify.json`, `screenshot-desktop.png`, and
-`screenshot-mobile.png`.
-
-## Known gaps
-
-None in the repair scope. Desktop release assets remain versioned through the
-existing tag workflow; this repair does not alter the released binary version.
+Run each exact command in `.factory/claims.json`; native commands require the
+Tauri Linux prerequisites linked from README.
