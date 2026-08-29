@@ -80,6 +80,16 @@ reproduces it directly. GitHub Actions builds `.dmg`, `.msi`/`.exe`,
 `.AppImage`, and `.deb` assets on the appropriate OS when a `v*` tag is pushed.
 It also publishes `SHA256SUMS` and `latest.json`.
 
+For a tagged release, stage the release-produced manifest before uploading the
+site, then verify the live provenance chain (including one downloaded asset):
+
+```sh
+npm run build:site
+npm run prepare:release-deploy -- B-Divyesh/sf-mail-attachment-archive vX.Y.Z <tag-commit>
+/opt/fleet/lib/deploy-static.sh mail-attachment-archive dist/site
+npm run verify:release-provenance -- https://mail-attachment-archive.sociobot.in B-Divyesh/sf-mail-attachment-archive vX.Y.Z <tag-commit>
+```
+
 ## Archive format
 
 An archive is an ordinary folder:

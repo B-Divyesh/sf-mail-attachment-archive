@@ -1,7 +1,7 @@
 {
   "name": "mail-attachment-archive",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,8 @@
     "test:e2e": "playwright test",
     "test:native-claim": "node scripts/run-native-claim.mjs",
     "verify:release-identity": "node scripts/verify-release-identity.mjs",
+    "prepare:release-deploy": "node --experimental-strip-types scripts/prepare-static-release.mjs",
+    "verify:release-provenance": "node --experimental-strip-types scripts/verify-release-provenance.mjs",
     "check": "tsc --noEmit"
   },
   "dependencies": {

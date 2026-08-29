@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { stageReleaseManifest, verifyReleaseProvenance, type FetchLike } from "../src/release-provenance";
 
 describe("release QA contracts", () => {
   it("keeps every desktop package version aligned", () => {
@@ -32,6 +33,54 @@ describe("release QA contracts", () => {
     expect(manifestBuilder).toContain("source_commit: sourceCommit.toLowerCase()");
   });
 
+  it("@claim:release-provenance rejects a stale deployed manifest and requires the live site, release, checksums, and installers to agree", async () => {
+    const repository = "owner/repo";
+    const tag = "v1.2.3";
+    const sourceCommit = "0123456789abcdef0123456789abcdef01234567";
+    const origin = "https://archive.example.test";
+    const filenames = {
+      macos: "archive-arm.dmg",
+      macos_intel: "archive-intel.dmg",
+      windows: "archive-setup.exe",
+      linux: "archive.AppImage",
+      linux_deb: "archive.deb"
+    };
+    const sha256 = "b".repeat(64);
+    const manifest = {
+      version: "1.2.3",
+      source_commit: sourceCommit,
+      published_at: "2026-08-29T00:00:00.000Z",
+      platforms: Object.fromEntries(Object.entries(filenames).map(([platform, filename]) => [platform, {
+        filename,
+        sha256,
+        url: `https://github.com/${repository}/releases/download/${tag}/${filename}`
+      }]))
+    };
+    const releaseAssets = ["latest.json", "SHA256SUMS", ...Object.values(filenames)].map(name => ({
+      name,
+      browser_download_url: name === "latest.json"
+        ? `https://github.com/${repository}/releases/download/${tag}/latest.json`
+        : name === "SHA256SUMS"
+          ? `https://github.com/${repository}/releases/download/${tag}/SHA256SUMS`
+          : `https://github.com/${repository}/releases/download/${tag}/${name}`
+    }));
+    const checksums = Object.values(filenames).map(filename => `${sha256}  ${filename}`).join("\n");
+    const fetcher = (stale = false): FetchLike => async url => {
+      const json = (value: unknown) => ({ ok: true, status: 200, json: async () => value, text: async () => JSON.stringify(value) });
+      const text = (value: string) => ({ ok: true, status: 200, json: async () => JSON.parse(value), text: async () => value });
+      if (url === `${origin}/latest.json`) return json({ ...manifest, source_commit: stale ? "f".repeat(40) : sourceCommit });
+      if (url === `${origin}/install.sh` || url === `${origin}/install.ps1`) return text(`https://github.com/${repository}/releases/latest/download/latest.json`);
+      if (url === `https://api.github.com/repos/${repository}/releases/tags/${tag}`) return json({ tag_name: tag, target_commitish: sourceCommit, assets: releaseAssets });
+      if (url.endsWith("/latest.json")) return json(manifest);
+      if (url.endsWith("/SHA256SUMS")) return text(checksums);
+      throw new Error(`Unexpected request: ${url}`);
+    };
+
+    await expect(verifyReleaseProvenance({ liveOrigin: origin, repository, tag, sourceCommit, fetcher: fetcher() })).resolves.toMatchObject({ source_commit: sourceCommit });
+    await expect(stageReleaseManifest({ repository, tag, sourceCommit, fetcher: fetcher() })).resolves.toMatchObject({ manifest: { source_commit: sourceCommit } });
+    await expect(verifyReleaseProvenance({ liveOrigin: origin, repository, tag, sourceCommit, fetcher: fetcher(true) })).rejects.toThrow(/Live manifest source_commit/);
+  });
+
   it("@claim:release-workflow-assets builds every supported desktop artifact and publishes both verification files", () => {
     const workflow = readFileSync(".github/workflows/release.yml", "utf8");
     const requiredMatrixEntries = [
@@ -47,6 +96,8 @@ describe("release QA contracts", () => {
     expect(workflow).toContain("node scripts/make-release-manifest.mjs release-assets");
     expect(workflow).toContain("release-assets/SHA256SUMS release-assets/latest.json");
     expect(workflow).toContain("gh release upload \"$RELEASE_TAG\"");
+    expect(readFileSync("package.json", "utf8")).toContain("prepare:release-deploy");
+    expect(readFileSync("scripts/prepare-static-release.mjs", "utf8")).toContain("stageReleaseManifest");
   });
 
   it("refuses to publish a tag from a different checked-out source commit", () => {
