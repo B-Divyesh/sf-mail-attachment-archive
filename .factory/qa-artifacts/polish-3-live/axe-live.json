@@ -1,0 +1,102 @@
+[
+  {
+    "mobile": false,
+    "route": "/",
+    "status": 200,
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": false,
+    "route": "/?demo=1",
+    "status": 200,
+    "title": "Demo — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": false,
+    "route": "/privacy/",
+    "status": 200,
+    "title": "Privacy — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": false,
+    "route": "/terms/",
+    "status": 200,
+    "title": "Terms — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": false,
+    "route": "/not-in-the-archive",
+    "status": 404,
+    "title": "Page not found — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": true,
+    "route": "/",
+    "status": 200,
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": true,
+    "route": "/?demo=1",
+    "status": 200,
+    "title": "Demo — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": true,
+    "route": "/privacy/",
+    "status": 200,
+    "title": "Privacy — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": true,
+    "route": "/terms/",
+    "status": 200,
+    "title": "Terms — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  },
+  {
+    "mobile": true,
+    "route": "/not-in-the-archive",
+    "status": 404,
+    "title": "Page not found — Mail Attachment Archive",
+    "h1": 1,
+    "serious": [],
+    "errors": [],
+    "failures": []
+  }
+]

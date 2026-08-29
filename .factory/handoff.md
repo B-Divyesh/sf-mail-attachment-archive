@@ -1,46 +1,62 @@
-# Mail Attachment Archive — review 3 handoff
+# Mail Attachment Archive — polish 3 handoff
 
 ## Outcome
 
-Independent adversarial review 3 is **FAIL**. No product code was changed.
-The review found one major and two minor claims-contract gaps: paid Archive
-Plus features are promised without an observable feature claim test; plain-file
-recheck on reopen is unlisted; and README release-workflow assertions are
-untested. Details and concrete fixes are in `.factory/review-3.md`.
+**PASS — no review findings remain.** Release source
+`ab987ec1720768b05faa39509a1cb7c641849321` is tagged `v0.1.6`; its successful
+cross-platform build is
+`https://github.com/B-Divyesh/sf-mail-attachment-archive/actions/runs/33238677733`.
+Static deployment `ca0309ac-c748-4a1e-9ec4-5cd45d52adf5` is live at
+`https://mail-attachment-archive.sociobot.in/`.
 
-## What was verified
+## Repairs
 
-- Cold live Chromium visits at 390 px (Android and iPhone user agents) and
-  desktop clearly identified the job, intended user, and first action.
-- The live isolated demo opened directly with four realistic records; Reset and
-  Start for real worked; the sole demo storage key was demo namespaced; the
-  request log stayed same-origin and cookies were empty.
-- Every exact command in `.factory/claims.json` passed. This includes native
-  local-only and free-core, which built and launched the production Tauri binary
-  under xvfb and strace and recorded zero external network connections.
-- Exact Rust claim tests, Playwright claim tests, and filtered Vitest claim
-  tests passed. Live link crawl, metadata/routing/focus checks, mobile layout,
-  headers/footers, and the designed 404 also passed.
+- Archive Plus now has observable production-app coverage for its saved recent
+  archive shortcut and compact ledger, including a recorded revocation lock.
+- Reopening a plain archive now writes its refreshed corruption result to the
+  JSON verification report as well as returning it to the desktop UI.
+- The release workflow promise is now a checked claim, and v0.1.6 publishes
+  all required installers, `SHA256SUMS`, and `latest.json`.
+- The static download manifest now points to v0.1.6. Its Linux DEB was
+  downloaded and matched SHA-256
+  `cbae3f196fa3a86cf4c3acf2b0750bc5344369a966b6ec79571426a6c88dc73c`.
+- The verb-first catalog sentence is in `.factory/catalog-description.txt`.
+  The complete finding-to-evidence mapping is `.factory/polish-3.md`.
 
-## Reproduce
+## Exact verification
+
+A clean clone at `v0.1.6` ran `npm ci`, every exact command in
+`.factory/claims.json`, and the full suite successfully:
 
 ```sh
-npm ci
-npm run test:e2e -- --grep @claim:demo-sandbox
+npm test                         # 18 passed
+npm run check
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo test --manifest-path src-tauri/Cargo.toml  # 13 passed
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+npm run build
+npm run test:e2e                 # 48 passed
 npm run test:native-claim -- local-only
 npm run test:native-claim -- free-core
-cargo test --manifest-path src-tauri/Cargo.toml claim_mbox_import
-npm test -- --testNamePattern @claim:plus-price
+npm run test:native-claim -- plus-shortcuts
 ```
 
-For native claims on Linux, install the prerequisites documented in README:
-`xvfb`, `strace`, `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`,
-`librsvg2-dev`, and `patchelf`.
+Native claims build and launch the production Tauri binary under `xvfb` and
+`strace`; all three record zero AF_INET/AF_INET6 connections. The fresh
+artifacts are `.factory/qa-artifacts/native-claims/`.
 
-## Next steps
+Cold live verification evidence is under
+`.factory/qa-artifacts/polish-3-live/`: `verify-url.sh` reports no console
+errors; live Axe has no serious or critical violations on desktop or 390 px;
+the designed 404 is a real HTTP 404; direct demo reset/exit, focus, phone
+guidance, titles, metadata, and shared navigation all pass. Lighthouse mobile:
+performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.09 s,
+CLS 0, TBT 7 ms.
 
-Resolve F-3-1 through F-3-3 in `.factory/review-3.md`, then rerun a full
-adversarial review rather than a diff-only check.
+## Known gaps and operator action
+
+None. v0.1.6 binaries are unsigned by design; the release page provides
+`SHA256SUMS` and the shipped installer scripts verify checksums before install.
 
 ---
 

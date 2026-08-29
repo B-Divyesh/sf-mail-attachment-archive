@@ -1,0 +1,14 @@
+{
+  "url": "https://mail-attachment-archive.sociobot.in/?demo=1",
+  "loadMs": 782,
+  "errors": [],
+  "a11y": {
+    "title": "Demo — Mail Attachment Archive",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 1190
+  }
+}

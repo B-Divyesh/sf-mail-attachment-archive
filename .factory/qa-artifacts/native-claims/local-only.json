@@ -1,6 +1,6 @@
 {
   "claim": "local-only",
-  "packagedBinary": "/work/repo/src-tauri/target/release/mail-attachment-archive",
+  "packagedBinary": "/tmp/maa-polish3-clean-dT6Laf/src-tauri/target/release/mail-attachment-archive",
   "commandBridge": [
     "import_mbox",
     "load_manifest"
@@ -48,7 +48,7 @@
       {
         "name": "reopened archive rendered",
         "passed": true,
-        "visible": "leaving-account.mbox · created 8/29/2026, 6:02:25 AM"
+        "visible": "leaving-account.mbox · created 8/29/2026, 6:42:06 AM"
       },
       {
         "name": "no authentication state",
@@ -58,7 +58,7 @@
     ],
     "title": "Mail Attachment Archive — check an MBOX export",
     "h1": "Your attachment ledger",
-    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 6:02:25 AMOpen archiveImport MBOX export Messages1Attachment references1Duplicates0Resolved locally100.0% Search this archiveAll statusesVerifiedDuplicatesNeeds attentionExport CSVExport JSON Attachment manifestFiles and references1 shownPDFclosing-statement.pdfYour final statement · 42 B38626ebb…24b89f✓ Verified Verification reportEvery decoded file is accounted for100.0%resolvedSource bytes42 BStored once42 BSpace avoided0 BStoragePlain local filesNo failures reported",
+    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 6:42:06 AMOpen archiveImport MBOX export Messages1Attachment references1Duplicates0Resolved locally100.0% Search this archiveAll statusesVerifiedDuplicatesNeeds attentionExport CSVExport JSON Attachment manifestFiles and references1 shownPDFclosing-statement.pdfYour final statement · 42 B38626ebb…24b89f✓ Verified Verification reportEvery decoded file is accounted for100.0%resolvedSource bytes42 BStored once42 BSpace avoided0 BStoragePlain local filesNo failures reported",
     "url": "tauri://localhost",
     "cookie": "",
     "storageKeys": []

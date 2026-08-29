@@ -1,6 +1,6 @@
 {
   "claim": "plus-shortcuts",
-  "packagedBinary": "/work/repo/src-tauri/target/release/mail-attachment-archive",
+  "packagedBinary": "/tmp/maa-polish3-clean-dT6Laf/src-tauri/target/release/mail-attachment-archive",
   "commandBridge": [
     "import_mbox",
     "load_manifest"
@@ -53,17 +53,17 @@
       {
         "name": "saved recent archive shortcut is available",
         "passed": true,
-        "visible": "archive/tmp/maa-native-plus-shortcuts-eMWfO1/archive/manifest.json"
+        "visible": "archive/tmp/maa-native-plus-shortcuts-YxZyk7/archive/manifest.json"
       },
       {
         "name": "saved recent archive shortcut reopens the archive",
         "passed": true,
-        "visible": "leaving-account.mbox · created 8/29/2026, 6:24:27 AM"
+        "visible": "leaving-account.mbox · created 8/29/2026, 6:45:11 AM"
       },
       {
         "name": "reopened archive rendered",
         "passed": true,
-        "visible": "leaving-account.mbox · created 8/29/2026, 6:24:27 AM"
+        "visible": "leaving-account.mbox · created 8/29/2026, 6:45:11 AM"
       },
       {
         "name": "revoked license hides compact ledger",
@@ -83,7 +83,7 @@
     ],
     "title": "Mail Attachment Archive — check an MBOX export",
     "h1": "Your attachment ledger",
-    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 6:24:27 AMOpen archiveImport MBOX export No archive openStart with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.Import your first MBOX exportLoad sample archiveWhat happens to my files?The app reads them locally, stores attachments without opening them, and writes a manifest plus a verification report beside them.",
+    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 6:45:11 AMOpen archiveImport MBOX export No archive openStart with an MBOX export from Gmail, Thunderbird, Apple Mail, or another mail provider.Import your first MBOX exportLoad sample archiveWhat happens to my files?The app reads them locally, stores attachments without opening them, and writes a manifest plus a verification report beside them.",
     "url": "tauri://localhost",
     "cookie": "",
     "storageKeys": [

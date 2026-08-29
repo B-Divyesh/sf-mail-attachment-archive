@@ -1,0 +1,52 @@
+{
+  "firstScreen": {
+    "h1": "Prove every attachment made it.",
+    "lede": "For people leaving or backing up an email account, it turns an MBOX export into a checked local archive.",
+    "tryText": "Try it with sample data",
+    "download": "https://github.com/B-Divyesh/sf-mail-attachment-archive/releases/download/v0.1.6/Mail.Attachment.Archive_0.1.6_amd64.AppImage",
+    "releaseVersion": "0.1.6"
+  },
+  "demo": {
+    "url": "https://mail-attachment-archive.sociobot.in/demo/",
+    "focusIsH1": true,
+    "banner": "Demo — sample data, nothing is saved",
+    "rows": 4,
+    "storage": [
+      "demo:mail-attachment-archive:state"
+    ],
+    "rowsAfterReset": 4,
+    "leaveUrl": "https://mail-attachment-archive.sociobot.in/#download",
+    "storageAfterLeave": []
+  },
+  "backFocusIsH1": true,
+  "sameOriginRequests": true,
+  "phone": [
+    {
+      "text": "Open this page on a computer",
+      "note": "Available for macOS, Windows, and Linux.",
+      "href": null
+    },
+    {
+      "text": "Open this page on a computer",
+      "note": "Available for macOS, Windows, and Linux.",
+      "href": null
+    }
+  ],
+  "routes": {
+    "/demo/": {
+      "title": "Demo — Mail Attachment Archive",
+      "nav": 4,
+      "h1": 1
+    },
+    "/privacy/": {
+      "title": "Privacy — Mail Attachment Archive",
+      "nav": 4,
+      "h1": 1
+    },
+    "/terms/": {
+      "title": "Terms — Mail Attachment Archive",
+      "nav": 4,
+      "h1": 1
+    }
+  }
+}
