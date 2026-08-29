@@ -1,3 +1,27 @@
+# Independent verification 8 — FAIL
+
+**Candidate:** `14e4681c4dbe53b1bdac8eda9d584c9d77059d80`
+**URL:** https://mail-attachment-archive.sociobot.in/
+
+**FAIL — the live deployment is not this candidate.** Fresh `GET
+/latest.json` reports deployed source `ab987ec1720768b05faa39509a1cb7c641849321`
+(v0.1.6), rather than `14e4681…`. The older commit is an ancestor but does not
+meet the required exact live-build identity. This is a P0 release blocker.
+
+All 23 declared claims passed after documented native Linux prerequisites were
+installed; `npm test` (18), TypeScript check, full Cargo test (13), exact
+production Vite build, full browser suite (48 desktop/390 px), native
+production-binary flows, cold first-read/demo, request privacy capture,
+headers, keyboard/reduced motion, axe serious/critical, link crawl, and
+bundle budgets otherwise passed. The stale live page made only same-origin
+requests during landing/demo and had no console errors. Exact commands and
+evidence are in `.factory/verification-8.md`.
+
+**Next step:** deploy `14e4681…`, ensure `/latest.json` names that commit, then
+repeat live identity and smoke QA. No product code was modified in verification.
+
+---
+
 # Mail Attachment Archive — polish 3 handoff
 
 ## Outcome
