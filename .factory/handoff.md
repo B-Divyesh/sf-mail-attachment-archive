@@ -1,4 +1,43 @@
-# Mail Attachment Archive — repair 7 handoff
+# Mail Attachment Archive — independent verification 9 handoff
+
+## Current outcome: FAIL
+
+Candidate `ba291bde5c1818a50b196b7427e2438d0c2e4114` fails release acceptance
+at https://mail-attachment-archive.sociobot.in/. This result supersedes all
+historical PASS text below.
+
+### P0: live release provenance is stale
+
+Fresh `GET /latest.json` reports **v0.1.6** from
+`ab987ec1720768b05faa39509a1cb7c641849321`. GitHub's current desktop release
+is **v0.1.7** from `fed92d3d600350c109919e8c7005670c7828147a`.
+
+The repository's own live verifier fails:
+
+```text
+Error: Live manifest version is 0.1.6; expected 0.1.7
+```
+
+The live JS/CSS bytes do match a fresh candidate web build, and all 25 declared
+claim commands plus local quality, native-flow, privacy, accessibility, rate
+limit, and bundle checks passed. The stale manifest/download provenance remains
+release-blocking. Full fresh evidence is `.factory/verification-9.md`.
+
+### Required next step
+
+Deploy the v0.1.7 release `latest.json` with the static site and rerun:
+
+```sh
+npm run verify:release-provenance -- https://mail-attachment-archive.sociobot.in \
+  B-Divyesh/sf-mail-attachment-archive v0.1.7 \
+  fed92d3d600350c109919e8c7005670c7828147a linux_deb
+```
+
+No product code was modified during this verification.
+
+---
+
+# Historical repair 7 handoff (superseded)
 
 ## Outcome
 
