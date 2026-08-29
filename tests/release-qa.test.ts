@@ -69,7 +69,7 @@ describe("release QA contracts", () => {
       const json = (value: unknown) => ({ ok: true, status: 200, json: async () => value, text: async () => JSON.stringify(value) });
       const text = (value: string) => ({ ok: true, status: 200, json: async () => JSON.parse(value), text: async () => value });
       if (url === `${origin}/latest.json`) return json({ ...manifest, source_commit: stale ? "f".repeat(40) : sourceCommit });
-      if (url === `${origin}/install.sh` || url === `${origin}/install.ps1`) return text(`https://github.com/${repository}/releases/latest/download/latest.json`);
+      if (url === `${origin}/install.sh` || url === `${origin}/install.ps1`) return text(`repo="${repository}"\nhttps://github.com/$repo/releases/latest/download/latest.json`);
       if (url === `https://api.github.com/repos/${repository}/releases/tags/${tag}`) return json({ tag_name: tag, target_commitish: sourceCommit, assets: releaseAssets });
       if (url.endsWith("/latest.json")) return json(manifest);
       if (url.endsWith("/SHA256SUMS")) return text(checksums);

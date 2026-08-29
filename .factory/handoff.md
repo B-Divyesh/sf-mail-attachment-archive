@@ -1,175 +1,85 @@
-# Independent verification 8 — FAIL
-
-**Candidate:** `14e4681c4dbe53b1bdac8eda9d584c9d77059d80`
-**URL:** https://mail-attachment-archive.sociobot.in/
-
-**FAIL — the live deployment is not this candidate.** Fresh `GET
-/latest.json` reports deployed source `ab987ec1720768b05faa39509a1cb7c641849321`
-(v0.1.6), rather than `14e4681…`. The older commit is an ancestor but does not
-meet the required exact live-build identity. This is a P0 release blocker.
-
-All 23 declared claims passed after documented native Linux prerequisites were
-installed; `npm test` (18), TypeScript check, full Cargo test (13), exact
-production Vite build, full browser suite (48 desktop/390 px), native
-production-binary flows, cold first-read/demo, request privacy capture,
-headers, keyboard/reduced motion, axe serious/critical, link crawl, and
-bundle budgets otherwise passed. The stale live page made only same-origin
-requests during landing/demo and had no console errors. Exact commands and
-evidence are in `.factory/verification-8.md`.
-
-**Next step:** deploy `14e4681…`, ensure `/latest.json` names that commit, then
-repeat live identity and smoke QA. No product code was modified in verification.
-
----
-
-# Mail Attachment Archive — polish 3 handoff
+# Mail Attachment Archive — repair 7 handoff
 
 ## Outcome
 
-**PASS — no review findings remain.** Release source
-`ab987ec1720768b05faa39509a1cb7c641849321` is tagged `v0.1.6`; its successful
-cross-platform build is
-`https://github.com/B-Divyesh/sf-mail-attachment-archive/actions/runs/33238677733`.
-Static deployment `ca0309ac-c748-4a1e-9ec4-5cd45d52adf5` is live at
-`https://mail-attachment-archive.sociobot.in/`.
+**PASS.** The release/deployment identity failure from independent verification
+8 is repaired. The stale failure was reproduced first: at 08:01 UTC,
+`https://mail-attachment-archive.sociobot.in/latest.json` identified
+`ab987ec1720768b05faa39509a1cb7c641849321` (v0.1.6), not verified candidate
+`14e4681c4dbe53b1bdac8eda9d584c9d77059d80`.
 
-## Repairs
+The repair release is **v0.1.7**, published from exact source commit
+`fed92d3d600350c109919e8c7005670c7828147a` and deployed to
+`https://mail-attachment-archive.sociobot.in/` as Azure Static Web Apps
+deployment `28a7d6d4-7433-4080-92fd-6e867fe63f1d`.
 
-- Archive Plus now has observable production-app coverage for its saved recent
-  archive shortcut and compact ledger, including a recorded revocation lock.
-- Reopening a plain archive now writes its refreshed corruption result to the
-  JSON verification report as well as returning it to the desktop UI.
-- The release workflow promise is now a checked claim, and v0.1.6 publishes
-  all required installers, `SHA256SUMS`, and `latest.json`.
-- The static download manifest now points to v0.1.6. Its Linux DEB was
-  downloaded and matched SHA-256
-  `cbae3f196fa3a86cf4c3acf2b0750bc5344369a966b6ec79571426a6c88dc73c`.
-- The verb-first catalog sentence is in `.factory/catalog-description.txt`.
-  The complete finding-to-evidence mapping is `.factory/polish-3.md`.
+## Repair
 
-## Exact verification
+- Added a release-manifest staging command. It downloads the manifest attached
+  to the tagged GitHub release, requires the expected tag and exact source
+  commit, and writes that exact response into `dist/site/latest.json` before
+  static deployment.
+- Added live provenance verification. It requires live `/latest.json`, the
+  GitHub release target, the release `latest.json`, each `SHA256SUMS` entry,
+  the two shipped installer scripts, and a downloaded selected installer asset
+  to agree. The regression fixture explicitly rejects a stale live commit and
+  covers installers that compose their GitHub URL from a repository variable.
+- Added the executable `release-provenance` claim and documented the required
+  release → stage → deploy → verify sequence in the README.
+- Bumped the immutable desktop release to v0.1.7; the desktop app and all
+  release metadata use the same version.
 
-A clean clone at `v0.1.6` ran `npm ci`, every exact command in
-`.factory/claims.json`, and the full suite successfully:
+## Exact publication and live evidence
 
-```sh
-npm test                         # 18 passed
-npm run check
-cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo test --manifest-path src-tauri/Cargo.toml  # 13 passed
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-npm run build
-npm run test:e2e                 # 48 passed
-npm run test:native-claim -- local-only
-npm run test:native-claim -- free-core
-npm run test:native-claim -- plus-shortcuts
+```text
+GitHub Release: v0.1.7
+Release target: fed92d3d600350c109919e8c7005670c7828147a
+Release workflow: https://github.com/B-Divyesh/sf-mail-attachment-archive/actions/runs/33243005224
+Live manifest source_commit: fed92d3d600350c109919e8c7005670c7828147a
+Live manifest version: 0.1.7
+Live Linux DEB: Mail.Attachment.Archive_0.1.7_amd64.deb
+Linux DEB SHA-256: 619a94cc59213989f820ffade967a73eb3014b3289e97720e21214f3cee38b55
 ```
 
-Native claims build and launch the production Tauri binary under `xvfb` and
-`strace`; all three record zero AF_INET/AF_INET6 connections. The fresh
-artifacts are `.factory/qa-artifacts/native-claims/`.
+`npm run verify:release-provenance -- https://mail-attachment-archive.sociobot.in B-Divyesh/sf-mail-attachment-archive v0.1.7 fed92d3d600350c109919e8c7005670c7828147a linux_deb`
+passed after deployment. It downloaded the v0.1.7 DEB and verified its
+SHA-256 against both `latest.json` and `SHA256SUMS`.
 
-Cold live verification evidence is under
-`.factory/qa-artifacts/polish-3-live/`: `verify-url.sh` reports no console
-errors; live Axe has no serious or critical violations on desktop or 390 px;
-the designed 404 is a real HTTP 404; direct demo reset/exit, focus, phone
-guidance, titles, metadata, and shared navigation all pass. Lighthouse mobile:
-performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.09 s,
-CLS 0, TBT 7 ms.
+## Verification
 
-## Known gaps and operator action
+From a clean `npm ci` install with documented Tauri Linux prerequisites:
 
-None. v0.1.6 binaries are unsigned by design; the release page provides
-`SHA256SUMS` and the shipped installer scripts verify checksums before install.
-
----
-
-# Previous handoff
-
-## Independent verification 7 — PASS
-
-Candidate `a7c3994ca998dd9fd730cd6fe320249a974b366c` is **PASS** for
-https://mail-attachment-archive.sociobot.in/ as of 2026-08-29 UTC. All 20
-declared claim tests passed after installing the documented Linux native-test
-prerequisites; local unit, type, browser, Rust, format, Clippy, and production
-build gates passed. Live demo, privacy/request logging, response headers,
-desktop/390px accessibility, keyboard/reduced-motion, release checksum, and
-license API allowance checks passed.
-
-The deployed web artifacts exactly match a fresh candidate production build.
-The v0.1.5 release manifest names tagged source `98688ee…`, an ancestor of the
-candidate, as intended. No defects by severity were found. Full commands,
-observed outcomes, and caveats are in `.factory/verification-7.md`.
-
-## Previous polish handoff
-
-## Outcome
-
-All cumulative review findings are closed. The repair preserves the
-evidentiary-geometry visual system and desktop-app deployment class. Commit
-`1351d2ad134df0a3744f0d059f6c1e8e90468954` is pushed to `main`; static
-deployment `04eec903-9a36-4d3a-b596-f05f9d9845be` is live.
-
-## Material repairs
-
-- Native claims now launch the production Tauri binary, use shipped IPC, render
-  workflow states, record filesystem outcomes, and trace network syscalls.
-- The free path completes encrypted import, reopen, full scan, restore, CSV,
-  and JSON export without a license.
-- Reopened encrypted archives now receive the correct unverified IPC state and
-  require a passphrase scan before showing a resolved result.
-- Every review-2 reliance statement is removed, narrowed, or listed and tested.
-- First-screen facts, section headings, demo error, README, footer, and pricing
-  copy use direct wording and consistent terminology.
-- The site manifest now points at the completed v0.1.5 cross-platform release,
-  whose source is `98688eeac97b7dedabacd02311a8f4bc3f74e462`.
-
-## Local evidence
-
-- `npm test`: 17 passed.
-- `npm run check`: passed.
-- `cargo test --manifest-path src-tauri/Cargo.toml`: 12 passed.
-- `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`: passed.
-- `npm run test:e2e`: 48 passed across desktop and 390 px.
-- `npm run test:native-claim -- local-only`: passed with zero external connections.
-- `npm run test:native-claim -- free-core`: passed through import, reopen,
-  encrypted scan, restore, and both report formats.
-- `npm run build`: produced `dist/site` and `dist/app`; site JS is 44.77 KB raw
-  and 13.39 KB gzip, CSS is 18.92 KB raw and 5.00 KB gzip.
-- Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices,
-  100 SEO; LCP 1.2 s, CLS 0, TBT 0 ms.
-- A fresh clone of `1351d2a` passed `npm ci`, `npm test` (17), `npm run check`,
-  `npm run build`, `npm run test:e2e` (48), Cargo tests (12), and Clippy.
-- Live `verify-url.sh`: 200, no console errors, route title, `lang=en`, one H1,
-  main landmark, and complete image alternatives. Live Axe on `/`, `?demo=1`,
-  privacy, terms, and the real 404 passed at desktop and 390 px with no serious
-  or critical findings. See `.factory/qa-artifacts/polish-2-live/`.
-
-## Verify
-
-```sh
-npm ci
-npm test
-npm run check
-cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo test --manifest-path src-tauri/Cargo.toml
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-npm run build
-npm run test:e2e
-npm run test:native-claim -- local-only
-npm run test:native-claim -- free-core
+```text
+npm ci                                               PASS (0 vulnerabilities)
+npm test                                             PASS (19 tests)
+npm run check                                        PASS
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check  PASS
+cargo test --manifest-path src-tauri/Cargo.toml      PASS
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings  PASS
+npm run build                                        PASS (dist/site and dist/app)
+npm run test:e2e                                     PASS (48 desktop + 390 px tests)
+npm run test:native-claim -- local-only              PASS (zero AF_INET/AF_INET6)
+npm run test:native-claim -- free-core               PASS
+npm run test:native-claim -- plus-shortcuts          PASS
 ```
 
-Linux native claim tests require the Tauri prerequisites, `xvfb`, and `strace`.
-Every exact claim command is listed in `.factory/claims.json`.
+The production site build is 46,089 B JavaScript raw / 13.68 KB gzip and
+18,918 B CSS raw / 5.00 KB gzip. Live `verify-url.sh` passed: HTTP 200,
+no console errors, title, `lang=en`, one H1, main landmark, and complete image
+alternatives. Its evidence is in `.factory/qa-artifacts/repair-7-live/`.
+Live Axe scans using the repository-pinned Playwright Chromium and
+`@axe-core/playwright` reported zero WCAG 2 A/AA violations and zero console
+errors at desktop and 390 px mobile. The standalone `@axe-core/cli` could not
+run because this container has no system Chrome binary; the pinned Playwright
+scan is the successful equivalent.
 
-## Operator action
+This is a local-first desktop app with no updater and no offline/PWA claim;
+the release manifest/download controls and native production flows cover the
+applicable update/release behavior. No telemetry or third-party website
+requests were introduced.
 
-The release remains unsigned unless the operator supplies Apple and Windows
-signing credentials. Signing is not required for the tested checksum-guided
-release path.
+## Known gaps / operator action
 
-## Remaining work
-
-None. The binaries are intentionally unsigned; their v0.1.5 release checksums
-are published and the installer scripts verify them before installation.
+None for the release. The macOS and Windows binaries remain unsigned by
+design; users are told how to handle platform warnings, and the release plus
+installer scripts verify SHA-256 before installation.

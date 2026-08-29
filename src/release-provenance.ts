@@ -13,8 +13,6 @@ type GitHubRelease = { tag_name: string; target_commitish: string; assets: Relea
 const asOrigin = (origin: string): string => origin.replace(/\/$/, "");
 const releaseDownloadUrl = (repository: string, tag: string, filename: string): string =>
   `https://github.com/${repository}/releases/download/${tag}/${encodeURIComponent(filename).replaceAll("%2F", "/")}`;
-const latestManifestUrl = (repository: string): string =>
-  `https://github.com/${repository}/releases/latest/download/latest.json`;
 
 async function readJson(fetcher: FetchLike, url: string): Promise<unknown> {
   const response = await fetcher(url);
@@ -98,9 +96,8 @@ export async function verifyReleaseProvenance(options: {
     }
   }
 
-  const latestDownload = latestManifestUrl(options.repository);
   for (const installer of [shellInstaller, powershellInstaller]) {
-    if (!installer.includes(options.repository) || !installer.includes(latestDownload)) {
+    if (!installer.includes(options.repository) || !installer.includes("releases/latest/download/latest.json")) {
       throw new Error("Live installer does not use this repository's current checksummed manifest");
     }
   }
