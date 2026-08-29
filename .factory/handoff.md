@@ -1,39 +1,66 @@
-# Mail Attachment Archive — review 2 handoff
+# Mail Attachment Archive — polish 2 handoff
 
 ## Outcome
 
-Completed the adversarial first-read review without changing product code.
-The verdict is **FAIL**. The review is in `.factory/review-2.md`.
+All cumulative review findings are implemented locally. The repair preserves
+the evidentiary-geometry visual system and desktop-app deployment class. Release
+and live cold verification remain in progress for this work order.
 
-## Verification performed
+## Material repairs
 
-- Cold live checks at desktop and 390px; no console/page errors.
-- Live `?demo=1` sandbox, reset, exit, storage namespace, and request-log
-  checks.
-- All 18 declared claim commands passed after `npm ci` and documented Tauri
-  Linux prerequisites were installed.
-- `npm test` (16 passed), `npm run check`, `npm run build`, and the full
-  Playwright suite (48 tests) passed.
-- Live Axe scans at 390px found zero serious/critical issues on landing, demo,
-  privacy, terms, and 404.
+- Native claims now launch the production Tauri binary, use shipped IPC, render
+  workflow states, record filesystem outcomes, and trace network syscalls.
+- The free path completes encrypted import, reopen, full scan, restore, CSV,
+  and JSON export without a license.
+- Reopened encrypted archives now receive the correct unverified IPC state and
+  require a passphrase scan before showing a resolved result.
+- Every review-2 reliance statement is removed, narrowed, or listed and tested.
+- First-screen facts, section headings, demo error, README, footer, and pricing
+  copy use direct wording and consistent terminology.
+- Version 0.1.5 is prepared for the cross-platform release workflow.
 
-## Remaining work
+## Local evidence
 
-The review reopens F-1-2 and F-1-3 as blockers: the green `local-only` and
-`free-core` tests call backend Rust functions directly instead of proving the
-public claims through a packaged desktop flow. F-1-29 also remains live as an
-untestable funding-benefit claim. The review records four further unlisted
-claims and three plain-language copy findings.
+- `npm test`: 17 passed.
+- `npm run check`: passed.
+- `cargo test --manifest-path src-tauri/Cargo.toml`: 12 passed.
+- `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`: passed.
+- `npm run test:e2e`: 46 passed, 2 expected project skips.
+- `npm run test:native-claim -- local-only`: passed with zero external connections.
+- `npm run test:native-claim -- free-core`: passed through import, reopen,
+  encrypted scan, restore, and both report formats.
+- `npm run build`: produced `dist/site` and `dist/app`; site JS is 44.77 KB raw
+  and 13.39 KB gzip, CSS is 18.92 KB raw and 5.00 KB gzip.
+- Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices,
+  100 SEO; LCP 1.2 s, CLS 0, TBT 0 ms.
+- Local URL verifier: no console errors; title, language, H1, main, labels, and
+  image alternatives pass.
 
-## How to reproduce
+## Verify
 
 ```sh
 npm ci
 npm test
 npm run check
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo test --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 npm run build
 npm run test:e2e
+npm run test:native-claim -- local-only
+npm run test:native-claim -- free-core
 ```
 
-Run each exact command in `.factory/claims.json`; native commands require the
-Tauri Linux prerequisites linked from README.
+Linux native claim tests require the Tauri prerequisites, `xvfb`, and `strace`.
+Every exact claim command is listed in `.factory/claims.json`.
+
+## Operator action
+
+The release remains unsigned unless the operator supplies Apple and Windows
+signing credentials. Signing is not required for the tested checksum-guided
+release path.
+
+## Remaining work
+
+Push/tag v0.1.5, wait for all release assets and checksums, update the same-origin
+manifest, deploy `dist/site`, and cold-check every live route and finding.

@@ -82,6 +82,7 @@ describe("release QA contracts", () => {
         readFileSync("tests/license.test.ts", "utf8"),
         readFileSync("tests/release-manifest.test.ts", "utf8"),
         readFileSync("tests/release-qa.test.ts", "utf8"),
+        readFileSync("scripts/run-native-claim.mjs", "utf8"),
         readFileSync("src-tauri/src/lib.rs", "utf8")
       ].join("\n");
       const tags = sources.match(new RegExp(`@claim:${claim.id}(?![A-Za-z0-9_-])`, "g")) || [];

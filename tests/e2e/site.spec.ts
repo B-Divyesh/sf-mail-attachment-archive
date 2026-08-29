@@ -39,15 +39,18 @@ test("@claim:demo-sandbox one click opens an isolated, resettable sample", async
   expect(await page.evaluate(() => localStorage.getItem("demo:mail-attachment-archive:state"))).toBeNull();
 });
 
-test("demo flow sends no data off origin", async ({ page }) => {
+test("@claim:site-privacy landing and demo set no tracking state or third-party requests", async ({ page }) => {
   const externalRequests: string[] = [];
   page.on("request", request => {
     if (new URL(request.url()).origin !== "http://127.0.0.1:4173") externalRequests.push(request.url());
   });
-  await page.goto("/demo/");
+  await page.goto("/");
+  await page.getByRole("link", { name: "Try it with sample data" }).click();
   await page.getByLabel("Search this archive").fill("northstar");
   await page.getByLabel("Filter by status").selectOption("verified");
   expect(externalRequests).toEqual([]);
+  expect(await page.context().cookies()).toEqual([]);
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(["demo:mail-attachment-archive:state"]);
 });
 
 test("@claim:sample-evidence exposes deduplication and every sample failure", async ({ page }) => {
@@ -55,7 +58,7 @@ test("@claim:sample-evidence exposes deduplication and every sample failure", as
   await expect(page.getByText("3 of 4")).toBeVisible();
   await expect(page.getByText("↳ Duplicate")).toHaveCount(1);
   await expect(page.getByText("! Reported")).toHaveCount(1);
-  await expect(page.getByText("Source data ended before decoding finished.")).toBeVisible();
+  await expect(page.getByText("The attachment data was incomplete, so this file could not be saved.")).toBeVisible();
 });
 
 test("@claim:csv-report exports one row per sample reference plus its issue", async ({ page }) => {
@@ -122,7 +125,7 @@ test("keyboard focus starts at the skip link and reduced motion stops looping", 
 
 test("@claim:plus-price shows the one-time price and opens a live Sociobot checkout", async ({ page, request }) => {
   await page.goto("/");
-  await expect(page.getByText("$29")).toBeVisible();
+  await expect(page.getByText("$29", { exact: true })).toBeVisible();
   const purchase = page.getByRole("link", { name: "Buy Archive Plus" });
   const checkoutUrl = "https://api.sociobot.in/api/v1/products/mail-attachment-archive/checkout";
   await expect(purchase).toHaveAttribute("href", checkoutUrl);

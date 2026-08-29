@@ -8,7 +8,7 @@ on:
       tag:
         description: Existing v* tag to publish
         required: true
-        default: v0.1.4
+        default: v0.1.5
 
 env:
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
@@ -84,7 +84,7 @@ jobs:
           tagName: ${{ env.RELEASE_TAG }}
           releaseName: Mail Attachment Archive ${{ env.RELEASE_TAG }}
           releaseBody: |
-            Local MBOX attachment archiving with SHA-256 deduplication, optional at-rest encryption, restoration verification, and explicit exception reports.
+            Local MBOX attachment archiving with SHA-256 duplicate checks, optional encryption, restoration checks, and explicit verification reports.
 
             These binaries are unsigned. Verify downloads against SHA256SUMS.
           releaseDraft: false

@@ -1,1 +1,1 @@
-Archive MBOX attachments locally and keep every failure in a verification report.
+Archive MBOX attachments locally, remove duplicates, and keep every failure in a verification report.

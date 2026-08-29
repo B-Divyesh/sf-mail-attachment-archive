@@ -5,9 +5,9 @@ email account. It keeps mail processing on their computer. It turns an MBOX
 export into a local attachment list. Duplicate files are stored once, and every
 failure stays in the verification report.
 
-The app does not connect to a mailbox, upload mail, or collect telemetry. The
-desktop app uses Rust and Tauri 2. The interface and website use Vite and
-TypeScript.
+The import reads the MBOX export you choose and writes the archive folder you
+choose. The desktop app uses Rust and Tauri 2. The interface and website use
+Vite and TypeScript.
 
 ## Try the sample
 
@@ -21,8 +21,8 @@ storage key. The desktop first-run screen includes **Load sample archive**.
 - Reads standard MBOX exports and their attached files on your computer.
 - Hashes decoded attachment bytes with SHA-256 and deduplicates identical files.
 - Stores attachments without opening them, in `.bin` files named by checksum.
-- Optionally encrypts every stored file using Argon2-derived keys and
-  XChaCha20-Poly1305. Passphrases are never written to disk.
+- Optionally encrypts stored attachment files. Your passphrase is never written
+  to disk.
 - Re-verifies plain files when an archive is reopened. Encrypted archives show
   no resolved score until you enter the passphrase and finish a full scan.
 - Searches by filename, sender, subject, or checksum.
@@ -30,8 +30,8 @@ storage key. The desktop first-run screen includes **Load sample archive**.
 - Safely rejects MBOX exports over 256 MB before reading them into memory. Split
   a larger export into smaller MBOX exports and import each one.
 
-This is not an inbox replacement and does not delete mail from a provider.
-Keep the source MBOX export until you have reviewed the verification report and restored samples.
+The app imports an exported file that you select. Keep the source MBOX export
+until you review the verification report and restore important files.
 
 ## Install
 
@@ -59,6 +59,7 @@ older distributions; a `.deb` is also attached to each release.
 
 Requirements: Node.js 22+, npm, stable Rust, and the
 [Tauri 2 system prerequisites](https://v2.tauri.app/start/prerequisites/).
+Linux native claim tests also require `xvfb` and `strace`.
 
 ```sh
 npm ci
@@ -69,6 +70,8 @@ npm run check
 cargo test --manifest-path src-tauri/Cargo.toml
 npm run build        # dist/site and dist/app
 npm run test:e2e     # Chromium desktop and 390 px
+npm run test:native-claim -- local-only
+npm run test:native-claim -- free-core
 ```
 
 The deployable static site is exactly `dist/site/`. `npm run build:site`
@@ -98,8 +101,9 @@ reported as file corruption. A successful full scan writes a verification report
 
 The free app includes import, duplicate checks, encryption, restoration, and
 all verification reports. Archive Plus costs $29 once and adds workspace
-shortcuts. Import, export, accessibility, and safety features remain free. See
-the hosted `/privacy/` and `/terms/` pages.
+shortcuts. Import, export, accessibility, and safety features remain free. Dodo
+hosts checkout. A revoked license no longer enables Plus features. See the
+hosted `/privacy/` and `/terms/` pages.
 
 Attachments can contain malware. The app stores attachments without opening
 them. A restored attachment should be scanned before opening. Please report

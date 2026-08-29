@@ -108,5 +108,5 @@ hand-authored SVGs made of nodes and checksum paths.
 - `public/assets/apple-touch-icon.png` is a 180 px rasterization of the
   hand-authored application mark.
 - The demo reuses the desktop ledger, verification ring, clipped panels, and
-  amber evidence banner. On 390 px, the exception report moves ahead of the
+  amber evidence banner. On 390 px, the verification report moves ahead of the
   attachment list so the unresolved item is not hidden below the sample data.

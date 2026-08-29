@@ -12,6 +12,7 @@ use std::{
     fs,
     path::{Component, Path, PathBuf},
 };
+use tauri::AppHandle;
 
 const ARCHIVE_VERSION: u8 = 1;
 // Importing an MBOX requires a complete parse today. Keep that allocation bounded
@@ -57,7 +58,9 @@ pub struct ArchiveManifest {
     encrypted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     encryption_probe: Option<String>,
-    #[serde(skip)]
+    // Persisted values are never trusted on reopen, but the current value must
+    // cross Tauri IPC so the UI can distinguish an unverified encrypted archive.
+    #[serde(default, skip_deserializing)]
     verification_complete: bool,
     messages: Vec<MessageRecord>,
     attachments: Vec<AttachmentRecord>,
@@ -72,6 +75,54 @@ struct ExtractedPart {
     bytes: Result<Vec<u8>, String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeClaimConfig {
+    claim: String,
+    source_path: String,
+    archive_path: String,
+    restored_path: String,
+    csv_path: String,
+    json_path: String,
+    passphrase: String,
+}
+
+/// Exposes a deterministic automation fixture only when the process was
+/// explicitly launched by the native claim runner. Normal packaged launches
+/// have no configuration and therefore cannot enter this path.
+#[tauri::command]
+fn native_claim_config() -> Option<NativeClaimConfig> {
+    let root = PathBuf::from(std::env::var("MAA_NATIVE_CLAIM_ROOT").ok()?);
+    let claim = std::env::var("MAA_NATIVE_CLAIM_ID").ok()?;
+    if !matches!(claim.as_str(), "local-only" | "free-core") {
+        return None;
+    }
+    Some(NativeClaimConfig {
+        claim,
+        source_path: root.join("leaving-account.mbox").to_string_lossy().into(),
+        archive_path: root.join("archive").to_string_lossy().into(),
+        restored_path: root
+            .join("restored-attachment.bin")
+            .to_string_lossy()
+            .into(),
+        csv_path: root.join("verification.csv").to_string_lossy().into(),
+        json_path: root.join("verification.json").to_string_lossy().into(),
+        passphrase: "native claim passphrase 2026".into(),
+    })
+}
+
+#[tauri::command]
+fn native_claim_finish(app: AppHandle, passed: bool, evidence: String) -> Result<(), String> {
+    let root = PathBuf::from(
+        std::env::var("MAA_NATIVE_CLAIM_ROOT")
+            .map_err(|_| "Native claim output was not configured.".to_string())?,
+    );
+    fs::write(root.join("ui-evidence.json"), evidence)
+        .map_err(io_error("write native UI evidence"))?;
+    app.exit(if passed { 0 } else { 2 });
+    Ok(())
+}
+
 #[tauri::command]
 fn import_mbox(
     source_path: String,
@@ -82,26 +133,26 @@ fn import_mbox(
     let source = PathBuf::from(&source_path);
     let destination = PathBuf::from(&destination_path);
     if !source.is_file() {
-        return Err("The selected MBOX file does not exist.".into());
+        return Err("The selected MBOX export does not exist.".into());
     }
     if encrypted && passphrase.as_deref().unwrap_or("").chars().count() < 10 {
         return Err("Encrypted archives require a passphrase of at least 10 characters.".into());
     }
     let source_size = fs::metadata(&source)
-        .map_err(io_error("inspect the MBOX file"))?
+        .map_err(io_error("inspect the MBOX export"))?
         .len();
     if source_size > MAX_MBOX_BYTES {
         return Err(format!(
-            "This MBOX is {} MB. This version safely imports files up to {} MB; split the export into smaller MBOX files and import each one.",
+            "This MBOX export is {} MB. This version safely imports exports up to {} MB; split it into smaller MBOX exports and import each one.",
             source_size / (1024 * 1024),
             MAX_MBOX_BYTES / (1024 * 1024)
         ));
     }
     fs::create_dir_all(destination.join("files")).map_err(io_error("create the archive folder"))?;
-    let raw = fs::read(&source).map_err(io_error("read the MBOX file"))?;
+    let raw = fs::read(&source).map_err(io_error("read the MBOX export"))?;
     let chunks = split_mbox(&raw);
     if chunks.is_empty() {
-        return Err("No RFC 5322 messages were found in this MBOX file.".into());
+        return Err("No email messages were found in this MBOX export.".into());
     }
 
     let mut manifest = ArchiveManifest {
@@ -232,7 +283,9 @@ fn import_mbox(
         manifest.messages.push(message);
     }
     if manifest.messages.is_empty() {
-        return Err("Messages were found, but none could be parsed. The file may not be a standard MBOX export.".into());
+        return Err(
+            "Messages were found, but none could be read. Choose a standard MBOX export.".into(),
+        );
     }
     write_manifest(&destination, &manifest)?;
     Ok(manifest)
@@ -658,7 +711,9 @@ pub fn run() {
             load_manifest,
             verify_encrypted_archive,
             restore_attachment,
-            export_report
+            export_report,
+            native_claim_config,
+            native_claim_finish
         ])
         .run(tauri::generate_context!())
         .expect("error while running Mail Attachment Archive");
@@ -811,7 +866,7 @@ mod tests {
     }
 
     #[test]
-    // @claim:local-only
+    // Supporting core test; the claim itself runs through the packaged app.
     fn claim_local_only_processes_a_shipped_mbox_with_filesystem_only_output() {
         let root = fresh_claim_root("local-only");
         let source = root.join("leaving-account.mbox");
@@ -874,7 +929,7 @@ mod tests {
     }
 
     #[test]
-    // @claim:free-core
+    // Supporting core test; the claim itself runs through the packaged app.
     fn claim_free_core_completes_unlicensed_import_reopen_encryption_restore_and_reports() {
         let root = fresh_claim_root("free-core");
         let source = root.join("free.mbox");
@@ -892,6 +947,11 @@ mod tests {
         let manifest_path = archive.join("manifest.json").to_string_lossy().to_string();
         let reopened = load_manifest(manifest_path.clone()).unwrap();
         assert!(!reopened.verification_complete);
+        assert_eq!(
+            serde_json::to_value(&reopened).unwrap()["verification_complete"],
+            false,
+            "Tauri IPC must tell the UI to request a passphrase scan"
+        );
         let checked = verify_encrypted_archive(manifest_path.clone(), passphrase.into()).unwrap();
         assert!(checked.verification_complete);
         let restored = root.join("restored-statement.pdf");
@@ -948,7 +1008,7 @@ mod tests {
             false,
             None,
         );
-        assert!(result.unwrap_err().contains("safely imports files up to"));
+        assert!(result.unwrap_err().contains("safely imports exports up to"));
         fs::remove_dir_all(root).unwrap();
     }
 

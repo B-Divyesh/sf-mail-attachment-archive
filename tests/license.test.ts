@@ -31,4 +31,20 @@ describe("license response policy", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain("api.sociobot.in/api/v1/products/mail-attachment-archive/verify?license=test-token");
   });
+
+  it("@claim:paid-license locks Plus when the billing gateway revokes a license", async () => {
+    const storage = new MemoryStorage();
+    storage.setItem("sb_license:mail-attachment-archive", "refunded-token");
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ json: async () => ({ valid: true, reason: "ok" }) })
+      .mockResolvedValueOnce({ json: async () => ({ valid: false, reason: "revoked" }) });
+    vi.stubGlobal("localStorage", storage);
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect((await verifyLicense(true)).valid).toBe(true);
+    expect(storedLicense().valid).toBe(true);
+    expect((await verifyLicense(true)).valid).toBe(false);
+    expect(storedLicense().valid).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

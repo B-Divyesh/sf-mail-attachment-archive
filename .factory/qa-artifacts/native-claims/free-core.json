@@ -1,0 +1,95 @@
+{
+  "claim": "free-core",
+  "packagedBinary": "/work/repo/src-tauri/target/release/mail-attachment-archive",
+  "commandBridge": [
+    "import_mbox",
+    "load_manifest",
+    "verify_encrypted_archive",
+    "restore_attachment",
+    "export_report:csv",
+    "export_report:json"
+  ],
+  "network": {
+    "tracedSyscalls": "connect,sendto",
+    "externalConnections": 0
+  },
+  "sourceUnchanged": true,
+  "manifest": {
+    "messages": 1,
+    "attachments": 1,
+    "encrypted": true
+  },
+  "ui": {
+    "claim": "free-core",
+    "passed": true,
+    "error": null,
+    "checks": [
+      {
+        "name": "unlicensed start",
+        "passed": true,
+        "visible": "The complete archive engine is free"
+      },
+      {
+        "name": "source choice shown",
+        "passed": true,
+        "visible": "Packaged app verificationChoosing the test MBOX exportThe production command bridge is processing a clean local fixture."
+      },
+      {
+        "name": "import result rendered",
+        "passed": true,
+        "visible": "1 shown"
+      },
+      {
+        "name": "free export controls rendered",
+        "passed": true,
+        "visible": "Export CSV · Export JSON"
+      },
+      {
+        "name": "Plus remains locked",
+        "passed": true,
+        "visible": "No license token"
+      },
+      {
+        "name": "reopened archive rendered",
+        "passed": true,
+        "visible": "leaving-account.mbox · created 8/29/2026, 2:35:28 AM"
+      },
+      {
+        "name": "encrypted archive awaits passphrase",
+        "passed": true,
+        "visible": "Enter the passphrase to check every file"
+      },
+      {
+        "name": "encrypted scan rendered",
+        "passed": true,
+        "visible": "Every decoded file is accounted for"
+      },
+      {
+        "name": "restorable record available",
+        "passed": true,
+        "visible": "closing-statement.pdf"
+      },
+      {
+        "name": "workflow success rendered",
+        "passed": true,
+        "visible": "Restored one checked file. CSV and JSON reports saved."
+      },
+      {
+        "name": "no authentication state",
+        "passed": true,
+        "visible": "No cookies or identity keys"
+      }
+    ],
+    "title": "Mail Attachment Archive — check an MBOX export",
+    "h1": "Your attachment ledger",
+    "visibleText": "Local archive workspaceYour attachment ledgerleaving-account.mbox · created 8/29/2026, 2:35:28 AMOpen archiveImport MBOX export Messages1Attachment references1Duplicates0Resolved locally100.0% Search this archiveAll statusesVerifiedDuplicatesNeeds attentionExport CSVExport JSONRestored one checked file. CSV and JSON reports saved. Attachment manifestFiles and references1 shownPDFclosing-statement.pdfYour final statement · 42 B38626ebb…24b89f✓ Verified VerificationEvery decoded file is accounted for100.0%resolvedSource bytes42 BStored once42 BSpace avoided0 BStorageEncryptedNo exception report needed",
+    "url": "tauri://localhost",
+    "cookie": "",
+    "storageKeys": []
+  },
+  "outputs": {
+    "restoredSha256": "38626ebbae12737dddb2ca4c8f9ff2a3009fac0146e98dc4a6e15e74e724b89f",
+    "csvBytes": 319,
+    "jsonBytes": 1292
+  }
+}

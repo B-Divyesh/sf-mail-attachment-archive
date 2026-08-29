@@ -34,7 +34,7 @@ export async function verifyLicense(force = false): Promise<LicenseState> {
   if (!force && state.checkedAt > Date.now() - 86_400_000) return state;
   try {
     const response = await fetch(`https://api.sociobot.in/api/v1/products/${slug}/verify?license=${encodeURIComponent(state.token)}`);
-    const result = (await response.json()) as { valid: boolean };
+    const result = (await response.json()) as { valid: boolean; reason?: string };
     const next = { token: state.token, valid: result.valid, checkedAt: Date.now() };
     localStorage.setItem(verdictKey, JSON.stringify(next));
     return next;

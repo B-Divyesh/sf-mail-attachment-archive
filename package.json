@@ -1,7 +1,7 @@
 {
   "name": "mail-attachment-archive",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
     "tauri": "tauri",
     "test": "vitest run tests/*.test.ts",
     "test:e2e": "playwright test",
+    "test:native-claim": "node scripts/run-native-claim.mjs",
     "verify:release-identity": "node scripts/verify-release-identity.mjs",
     "check": "tsc --noEmit"
   },
