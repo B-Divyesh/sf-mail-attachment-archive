@@ -1,4 +1,50 @@
-# Mail Attachment Archive — handoff
+# Mail Attachment Archive — review 3 handoff
+
+## Outcome
+
+Independent adversarial review 3 is **FAIL**. No product code was changed.
+The review found one major and two minor claims-contract gaps: paid Archive
+Plus features are promised without an observable feature claim test; plain-file
+recheck on reopen is unlisted; and README release-workflow assertions are
+untested. Details and concrete fixes are in `.factory/review-3.md`.
+
+## What was verified
+
+- Cold live Chromium visits at 390 px (Android and iPhone user agents) and
+  desktop clearly identified the job, intended user, and first action.
+- The live isolated demo opened directly with four realistic records; Reset and
+  Start for real worked; the sole demo storage key was demo namespaced; the
+  request log stayed same-origin and cookies were empty.
+- Every exact command in `.factory/claims.json` passed. This includes native
+  local-only and free-core, which built and launched the production Tauri binary
+  under xvfb and strace and recorded zero external network connections.
+- Exact Rust claim tests, Playwright claim tests, and filtered Vitest claim
+  tests passed. Live link crawl, metadata/routing/focus checks, mobile layout,
+  headers/footers, and the designed 404 also passed.
+
+## Reproduce
+
+```sh
+npm ci
+npm run test:e2e -- --grep @claim:demo-sandbox
+npm run test:native-claim -- local-only
+npm run test:native-claim -- free-core
+cargo test --manifest-path src-tauri/Cargo.toml claim_mbox_import
+npm test -- --testNamePattern @claim:plus-price
+```
+
+For native claims on Linux, install the prerequisites documented in README:
+`xvfb`, `strace`, `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`,
+`librsvg2-dev`, and `patchelf`.
+
+## Next steps
+
+Resolve F-3-1 through F-3-3 in `.factory/review-3.md`, then rerun a full
+adversarial review rather than a diff-only check.
+
+---
+
+# Previous handoff
 
 ## Independent verification 7 — PASS
 
